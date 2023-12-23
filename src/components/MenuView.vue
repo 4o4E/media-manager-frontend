@@ -9,7 +9,7 @@
     <el-image src="favicon.ico" style="height: 3em; margin-right: 1em" />
     <el-menu-item index="/">主页</el-menu-item>
     <el-menu-item index="/upload">上传</el-menu-item>
-    <el-menu-item index="/upload">上传</el-menu-item>
+    <el-menu-item index="/upload">测试 PR</el-menu-item>
     <div class="flex-grow" />
     <el-menu-item index="/login">登录/注册</el-menu-item>
     <!--<el-menu-item index="/signin">登录</el-menu-item>-->

@@ -1,47 +1,176 @@
 <template>
-  <div>
-    <el-upload
-      class="upload-demo"
-      method="PUT"
-      :action="uploadUrl"
-      :limit="1"
-      :show-file-list="false"
-      :on-success="handleSuccess"
-      :before-upload="beforeUpload"
-    />
-    <!--<el-image src="http://localhost/api/file/5a85b04b1c336b64a5a17916b22733e2aadc42c80520e675d12f3bace4201c21" />-->
-    <br />
-    <el-button size="small" type="primary" @click="download">点击上传</el-button>
-  </div>
+  <el-form style="width: 300px; margin: auto;">
+    <el-form-item>
+      <!-- 上传文件 -->
+      <el-upload
+        v-if="!file"
+        accept=".png, .jpg, .gif, .bmp"
+        :auto-upload="false"
+        :limit="1"
+        :on-exceed="handleExceed"
+        :on-change="onChange"
+        style="width: 100%; margin: 0 auto;"
+      >
+        <el-button>
+          <el-text style="width: 300px; margin: 0 auto;">选择图片</el-text>
+        </el-button>
+      </el-upload>
+      <!-- 图片预览 -->
+      <el-image
+        ref="image"
+        v-if="file"
+        style="width: 300px; height: 300px" :src="fileUrl" fit="scale-down" />
+    </el-form-item>
+
+    <!-- 输入tag -->
+    <el-form-item v-if="file">
+      <div class="flex gap-2">
+        <el-tag
+          v-for="tag in tags"
+          :key="tag"
+          closable
+          :disable-transitions="false"
+          size="large"
+          @close="handleClose(tag)"
+        >{{ tag }}</el-tag>
+        <el-input
+          v-if="inputVisible"
+          ref="InputRef"
+          v-model="inputValue"
+          @keyup.enter="handleInputConfirm"
+          @blur="handleInputConfirm"
+        />
+        <el-button v-else @click="showInput">+</el-button>
+        <el-space/>
+        <div>
+          <!-- 确认上传 -->
+          <el-button
+            v-if="tags.size != 0"
+            type="success"
+            @click="uploadImageMessage"
+          >上传
+          </el-button>
+<!--          <el-button-->
+<!--            class="flex"-->
+<!--            @click="() => {-->
+<!--          dynamicTags.add(tag)-->
+<!--          tag = ''-->
+<!--        }"-->
+<!--          >上传</el-button>-->
+        </div>
+      </div>
+    </el-form-item>
+  </el-form>
 </template>
 
 <script setup lang="ts">
-import axios from 'axios'
+import { nextTick, ref } from 'vue'
+import {
+  ElMessage,
+  genFileId,
+  type ImageViewerInstance,
+  type UploadFile,
+  type UploadInstance,
+  type UploadProps,
+  type UploadRawFile
+} from 'element-plus'
+import { baseUrl, uploadFile } from '@/api/api'
+import { requireAuth, useToken } from '@/api/auth'
+import type { MessageData } from '@/api/type'
+import { ElInput } from 'element-plus'
 
+const inputValue = ref('')
+const inputVisible = ref(false)
+const InputRef = ref<InstanceType<typeof ElInput>>()
 
-const uploadUrl = 'http://localhost/api/file/'
-
-const handleSuccess = (response: any, file: any, fileList: any) => {
-  console.log(response)
+const handleClose = (tag: string) => {
+  tags.value.delete(tag)
 }
 
-const beforeUpload = (file: File) => {
-  // 在上传前的处理逻辑，可以在这里进行文件格式、大小等的验证
-  console.log(file)
-  return true // 返回 false 可以取消上传
-}
-
-const download = () => {
-  axios({
-    url: "http://localhost/api/file/aaaa",
-    method: 'POST'
+const showInput = () => {
+  inputVisible.value = true
+  nextTick(() => {
+    InputRef.value!.input!.focus()
   })
+}
+
+const handleInputConfirm = () => {
+  if (inputValue.value) {
+    tags.value.add(inputValue.value)
+  }
+  inputVisible.value = false
+  inputValue.value = ''
+}
+
+const upload = ref<UploadInstance>()
+const file = ref<UploadFile | null>()
+const fileUrl = ref<string | null>()
+const tags = ref<Set<string>>(new Set())
+const uploadedId = ref<string | null>()
+const image = ref<ImageViewerInstance>()
+
+requireAuth()
+
+// 用于限制只上传一个文件
+const handleExceed: UploadProps['onExceed'] = (files) => {
+  console.log(upload.value)
+  upload.value!.clearFiles()
+  const file = files[0] as UploadRawFile
+  file.uid = genFileId()
+  upload.value!.handleStart(file)
+}
+
+// 用来捕获上传的文件
+const onChange = (uploadFile: UploadFile) => {
+  file.value = uploadFile
+  fileUrl.value = URL.createObjectURL(uploadFile.raw!)
+}
+// 上传图片消息
+const uploadImageMessage = async () => {
+
+  const blob = new Blob([await file.value!.raw!.arrayBuffer()])
+  // 先上传文件
+  uploadedId.value = await uploadFile(blob)
+  if (!uploadedId.value) return
+  const resp = await useToken<MessageData | string>({
+    method: 'put',
+    url: `${baseUrl}/api/message`,
+    data: {
+      chain: [
+        {
+          id: uploadedId.value,
+          type: 'image',
+          format: file.value!.name.substring(file.value!.name.lastIndexOf('.') + 1),
+          file: false,
+          width: 0,
+          height: 0
+        }
+      ],
+      tags: Array.from(tags.value)
+    }
+  })
+  if (resp.status !== 200) {
+    ElMessage({
+      type: 'warning',
+      message: resp.data as string
+    })
+    return
+  }
+  ElMessage({
+    type: 'success',
+    message: "上传成功"
+  })
+  file.value = null
+  tags.value.clear()
 }
 </script>
 
 <style scoped>
-.upload-demo {
-  display: inline-block;
-  margin-right: 10px;
+.flex {
+  display: flex;
+}
+.gap-2 {
+  grid-gap: 0.5rem;
+  gap: 0.5rem;
 }
 </style>

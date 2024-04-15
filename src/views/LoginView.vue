@@ -1,4 +1,5 @@
 <template>
+  <!-- 登录 -->
   <template v-if="type === 'login'">
     <el-form
       ref="loginFormRef"
@@ -13,7 +14,7 @@
         <el-input v-model="loginForm.username" placeholder="请输入用户名" />
       </el-form-item>
       <el-form-item label="密码" prop="password">
-        <el-input v-model="loginForm.password" placeholder="请输入密码" />
+        <el-input type="password" show-password v-model="loginForm.password" placeholder="请输入密码" />
       </el-form-item>
       <el-form-item>
         <el-button type="primary" @click="login(loginFormRef)">登录</el-button>
@@ -22,6 +23,7 @@
       </el-form-item>
     </el-form>
   </template>
+  <!-- 忘记密码 -->
   <template v-else-if="type === 'forget'">
     <el-form
       ref="forgetFormRef"
@@ -39,7 +41,8 @@
         </el-select>
       </el-form-item>
       <el-form-item :label="forgetForm.type === 'email' ? '邮箱' : '手机号'" prop="value">
-        <el-input v-model="forgetForm.value" :placeholder="`请输入${forgetForm.type === 'email' ? '邮箱' : '手机号'}`" />
+        <el-input v-model="forgetForm.value"
+                  :placeholder="`请输入${forgetForm.type === 'email' ? '邮箱' : '手机号'}`" />
       </el-form-item>
       <el-form-item>
         <el-button type="primary" @click="forget(forgetFormRef)">找回</el-button>
@@ -47,6 +50,7 @@
       </el-form-item>
     </el-form>
   </template>
+  <!-- 注册 -->
   <template v-else>
     <el-form
       ref="registerFormRef"
@@ -61,10 +65,10 @@
         <el-input v-model="registerForm.username" placeholder="请输入用户名" />
       </el-form-item>
       <el-form-item label="密码" prop="password">
-        <el-input v-model="registerForm.password" placeholder="请输入密码" />
+        <el-input type="password" show-password v-model="registerForm.password" placeholder="请输入密码" />
       </el-form-item>
       <el-form-item label="重复密码" prop="passwordConfirm">
-        <el-input v-model="registerForm.passwordConfirm" placeholder="请重复密码" />
+        <el-input type="password" show-password v-model="registerForm.passwordConfirm" placeholder="请重复密码" />
       </el-form-item>
       <el-form-item>
         <el-button type="primary" @click="register(registerFormRef)">注册</el-button>
@@ -76,21 +80,29 @@
 
 <script setup lang="ts">
 import { reactive, ref } from 'vue'
-import type { FormInstance, FormRules } from 'element-plus'
-import type { ElForm, ElFormItem, ElInput, ElButton } from 'element-plus'
+import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
 import axios from 'axios'
 import { baseUrl } from '@/api/api'
+import type { Login } from '@/api/type'
+import { setAuth } from '@/api/auth'
+import router from '@/router'
 
+// 控制界面类型
 type PageType = 'login' | 'register' | 'forget'
 const type = ref<PageType>('login')
 
+/// 登录
+
+// 表单数据模型
 interface LoginForm {
   username: string | null,
   password: string | null
 }
-
+// 表单实例
 const loginFormRef = ref<FormInstance>()
+// 表单数据
 const loginForm = reactive<LoginForm>({ username: null, password: null })
+// 校验规则
 const loginRules = reactive<FormRules<LoginForm>>({
   username: [
     { required: true, message: '请输入用户名', trigger: 'blur' }
@@ -99,26 +111,50 @@ const loginRules = reactive<FormRules<LoginForm>>({
     { required: true, message: '请输入密码', trigger: 'blur' }
   ]
 })
+// 发送请求
 const login = async (form: FormInstance | undefined) => {
   if (!form) return
-  await form.validate((valid) => {
-    if (valid) axios({
+  await form.validate(async (valid) => {
+    if (!valid) return
+    const resp = await axios.request<Login | string>({
       baseURL: baseUrl,
       method: 'post',
       url: '/api/auth/login',
       data: loginForm
     })
+    // 状态码不是200代表请求出现错误, 此时body就是错误信息, 由后端提供
+    if (resp.status !== 200) {
+      console.log(resp.data)
+      ElMessage({
+        type: 'warning',
+        message: resp.data as string
+      })
+      return
+    }
+    // 保存用户信息
+    setAuth(resp.data as Login)
+    // 跳转主界面
+    await router.push('/')
+    ElMessage({
+      type: 'success',
+      message: '登录成功'
+    })
   })
 }
 
+/// 忘记密码
+
+// 表单数据模型
 type ForgetType = 'email' | 'sms'
 interface ForgetForm {
   type: ForgetType,
   value: string | null
 }
-
+// 表单实例
 const forgetFormRef = ref<FormInstance>()
+// 表单数据
 const forgetForm = reactive<ForgetForm>({ type: 'email', value: null })
+// 校验规则
 const forgetRules = reactive<FormRules<ForgetForm>>({
   type: [
     { required: true, trigger: 'blur' }
@@ -127,6 +163,7 @@ const forgetRules = reactive<FormRules<ForgetForm>>({
     { required: true, message: '请输入用户名', trigger: 'blur' }
   ]
 })
+// 发送请求
 const forget = async (form: FormInstance | undefined) => {
   if (!form) return
   await form.validate((valid) => {
@@ -139,18 +176,23 @@ const forget = async (form: FormInstance | undefined) => {
   })
 }
 
+/// 注册
+
+// 表单数据模型
 interface RegisterForm {
   username: string | null
   password: string | null
   passwordConfirm: string | null
 }
-
+// 表单实例
 const registerFormRef = ref<FormInstance>()
+// 表单数据
 const registerForm = reactive<RegisterForm>({
   username: '',
   password: '',
   passwordConfirm: ''
 })
+// 校验规则
 const registerRules = reactive<FormRules<RegisterForm>>({
   username: [
     { required: true, message: '请输入用户名', trigger: 'blur' },
@@ -163,6 +205,7 @@ const registerRules = reactive<FormRules<RegisterForm>>({
     { required: true, message: '请重复密码', trigger: 'blur' }
   ]
 })
+// 发送请求
 const register = async (form: FormInstance | undefined) => {
   if (!form) return
   await form.validate((valid) => {

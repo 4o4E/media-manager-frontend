@@ -43,34 +43,30 @@
         :width="'100px'"
         :height="'100px'"
       />
-      <el-divider v-if="messages!.length != i" />
+      <el-divider v-if="messages.length != i" />
     </template>
   </div>
 </template>
 
 <script setup lang="ts">
-import { requireAuth, useToken } from '@/api/auth'
+import { requireAuth } from '@/api/auth'
 import { nextTick, ref } from 'vue'
 import { type MessageData } from '@/api/type'
-import { baseUrl } from '@/api/api'
+import { client } from '@/api/api'
 import ImageMessageView from '@/components/ImageMessageView.vue'
 import { ElInput } from 'element-plus'
 
 requireAuth()
 
 const queryMode = ref<0 | 1>(0)
-const messages = ref<MessageData[]>()
+const messages = ref<MessageData[]>([])
 
 const search = async () => {
-  const resp = await useToken<MessageData[]>({
-    method: 'post',
-    url: `${baseUrl}/api/message`,
-    data: {
-      queryMode: queryMode.value,
-      tags: Array.from(tags.value),
-      count: 10,
-      type: 'IMAGE'
-    }
+  const resp = await client.post<MessageData[]>("/api/message", {
+    queryMode: queryMode.value,
+    tags: Array.from(tags.value),
+    count: 10,
+    type: 'IMAGE'
   })
   messages.value = resp.data
 }

@@ -5,7 +5,7 @@
         <el-text size="large">是否确认登出</el-text>
       </div>
       <el-button type="warning" @click="() => {
-        clearAuth()
+        auth = null
         router.push('/')
       }">确认
       </el-button>
@@ -17,7 +17,7 @@
 
 <script setup lang="ts">
 import router from '@/router'
-import { clearAuth } from '@/api/auth'
+import { auth } from '@/api/auth'
 </script>
 
 <style scoped>

@@ -9,11 +9,6 @@ const router = createRouter({
       component: () => import('@/views/HomeView.vue')
     },
     {
-      path: '/about',
-      name: 'about',
-      component: () => import('@/views/AboutView.vue')
-    },
-    {
       path: '/login',
       name: 'login',
       component: () => import('@/views/LoginView.vue')
@@ -33,11 +28,21 @@ const router = createRouter({
       name: 'browser',
       component: () => import('@/views/BrowserView.vue')
     },
-    // {
-    //   path: '/browse/:type/:tags',
-    //   name: 'browse',
-    //   component: () => import('@/views/browse/ListByTags.vue')
-    // }
+    {
+      path: '/random',
+      name: 'random',
+      component: () => import('@/views/RandomView.vue')
+    },
+    {
+      path: '/users',
+      name: 'users',
+      component: () => import('@/views/admin/UsersView.vue')
+    },
+    {
+      path: '/roles',
+      name: 'roles',
+      component: () => import('@/views/admin/RolesView.vue')
+    },
   ]
 })
 

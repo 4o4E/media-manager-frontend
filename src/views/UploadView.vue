@@ -32,7 +32,8 @@
           :disable-transitions="false"
           size="large"
           @close="handleClose(tag)"
-        >{{ tag }}</el-tag>
+        >{{ tag }}
+        </el-tag>
         <el-input
           v-if="inputVisible"
           ref="InputRef"
@@ -41,7 +42,7 @@
           @blur="handleInputConfirm"
         />
         <el-button v-else @click="showInput">+</el-button>
-        <el-space/>
+        <el-space />
         <div>
           <!-- 确认上传 -->
           <el-button
@@ -50,13 +51,13 @@
             @click="uploadImageMessage"
           >上传
           </el-button>
-<!--          <el-button-->
-<!--            class="flex"-->
-<!--            @click="() => {-->
-<!--          dynamicTags.add(tag)-->
-<!--          tag = ''-->
-<!--        }"-->
-<!--          >上传</el-button>-->
+          <!--          <el-button-->
+          <!--            class="flex"-->
+          <!--            @click="() => {-->
+          <!--          dynamicTags.add(tag)-->
+          <!--          tag = ''-->
+          <!--        }"-->
+          <!--          >上传</el-button>-->
         </div>
       </div>
     </el-form-item>
@@ -65,17 +66,10 @@
 
 <script setup lang="ts">
 import { nextTick, ref } from 'vue'
-import {
-  ElMessage,
-  genFileId,
-  type ImageViewerInstance,
-  type UploadFile,
-  type UploadInstance,
-  type UploadProps,
-  type UploadRawFile
-} from 'element-plus'
-import { baseUrl, uploadFile } from '@/api/api'
-import { requireAuth, useToken } from '@/api/auth'
+import type { ImageViewerInstance, UploadFile, UploadInstance, UploadProps, UploadRawFile } from 'element-plus'
+import { ElMessage, genFileId } from 'element-plus'
+import { client, uploadFile } from '@/api/api'
+import { requireAuth } from '@/api/auth'
 import type { MessageData } from '@/api/type'
 import { ElInput } from 'element-plus'
 
@@ -132,22 +126,16 @@ const uploadImageMessage = async () => {
   // 先上传文件
   uploadedId.value = await uploadFile(blob)
   if (!uploadedId.value) return
-  const resp = await useToken<MessageData | string>({
-    method: 'put',
-    url: `${baseUrl}/api/message`,
-    data: {
-      chain: [
-        {
-          id: uploadedId.value,
-          type: 'image',
-          format: file.value!.name.substring(file.value!.name.lastIndexOf('.') + 1),
-          file: false,
-          width: 0,
-          height: 0
-        }
-      ],
-      tags: Array.from(tags.value)
-    }
+  const resp = await client.put<MessageData | string>('/api/message', {
+    chain: [{
+      id: uploadedId.value,
+      type: 'image',
+      format: file.value!.name.substring(file.value!.name.lastIndexOf('.') + 1),
+      file: false,
+      width: 0,
+      height: 0
+    }],
+    tags: Array.from(tags.value)
   })
   if (resp.status !== 200) {
     ElMessage({
@@ -158,7 +146,7 @@ const uploadImageMessage = async () => {
   }
   ElMessage({
     type: 'success',
-    message: "上传成功"
+    message: '上传成功'
   })
   file.value = null
   tags.value.clear()
@@ -169,6 +157,7 @@ const uploadImageMessage = async () => {
 .flex {
   display: flex;
 }
+
 .gap-2 {
   grid-gap: 0.5rem;
   gap: 0.5rem;

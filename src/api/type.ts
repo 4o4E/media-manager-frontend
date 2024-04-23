@@ -1,13 +1,21 @@
-export type User = {
-  id: number,
+export interface User {
+  id: number
   name: string
+  point: number
+}
+
+export interface Role {
+  id: number
+  name: string
+  description: string
 }
 
 export interface Login {
   userId: number,
   token: string,
   expire: number,
-  perms: Set<string>
+  roles: Role[],
+  perms: string[]
 }
 
 export interface MessageInfo {

@@ -81,10 +81,9 @@
 <script setup lang="ts">
 import { reactive, ref } from 'vue'
 import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
-import axios from 'axios'
-import { baseUrl } from '@/api/api'
+import { client } from '@/api/api'
 import type { Login } from '@/api/type'
-import { setAuth } from '@/api/auth'
+import { auth } from '@/api/auth'
 import router from '@/router'
 
 // 控制界面类型
@@ -116,12 +115,7 @@ const login = async (form: FormInstance | undefined) => {
   if (!form) return
   await form.validate(async (valid) => {
     if (!valid) return
-    const resp = await axios.request<Login | string>({
-      baseURL: baseUrl,
-      method: 'post',
-      url: '/api/auth/login',
-      data: loginForm
-    })
+    const resp = await client.post<Login | string>('/api/auth/login', loginForm)
     // 状态码不是200代表请求出现错误, 此时body就是错误信息, 由后端提供
     if (resp.status !== 200) {
       console.log(resp.data)
@@ -132,7 +126,7 @@ const login = async (form: FormInstance | undefined) => {
       return
     }
     // 保存用户信息
-    setAuth(resp.data as Login)
+    auth.value = resp.data as Login
     // 跳转主界面
     await router.push('/')
     ElMessage({
@@ -167,12 +161,7 @@ const forgetRules = reactive<FormRules<ForgetForm>>({
 const forget = async (form: FormInstance | undefined) => {
   if (!form) return
   await form.validate((valid) => {
-    if (valid) axios({
-      baseURL: baseUrl,
-      method: 'post',
-      url: '/api/auth/login',
-      data: loginForm
-    })
+    if (valid) client.post('/api/auth/login', loginForm)
   })
 }
 
@@ -209,12 +198,7 @@ const registerRules = reactive<FormRules<RegisterForm>>({
 const register = async (form: FormInstance | undefined) => {
   if (!form) return
   await form.validate((valid) => {
-    if (valid) axios({
-      baseURL: baseUrl,
-      method: 'post',
-      url: '/api/auth/register',
-      data: registerForm
-    })
+    if (valid) client.post('/api/auth/register', registerForm)
   })
 }
 </script>

@@ -1,9 +1,26 @@
 <template>
   <template v-for="(item, i) in messages" :key="i">
     <image-message-view
+      v-if="item.info.type == 'IMAGE'"
       :message="item"
       :width="'100px'"
       :height="'100px'"
+    />
+    <video-message-view
+      v-else-if="item.info.type == 'VIDEO'"
+      :message="item"
+      :width="'100px'"
+      :height="'100px'"
+    />
+    <audio-message-view
+      v-else-if="item.info.type == 'AUDIO'"
+      :message="item"
+      :width="'100px'"
+      :height="'100px'"
+    />
+    <text-message-view
+      v-else-if="item.info.type == 'TEXT'"
+      :message="item"
     />
     <el-divider v-if="messages.length != i" />
   </template>
@@ -18,6 +35,9 @@ import { ElMessage } from 'element-plus'
 import { ref } from 'vue'
 import ImageMessageView from '@/components/ImageMessageView.vue'
 import InfiniteLoading from '@/components/InfiniteLoading.vue'
+import VideoMessageView from '@/components/VideoMessageView.vue'
+import AudioMessageView from '@/components/AudioMessageView.vue'
+import TextMessageView from '@/components/TextMessageView.vue'
 
 requireAuth()
 

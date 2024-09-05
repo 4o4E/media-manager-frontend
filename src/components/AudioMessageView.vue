@@ -1,14 +1,13 @@
 <template>
   <div style="display: flex">
-    <el-image
-      :preview-src-list="[`${baseUrl}/api/file/${(props.message.data[0] as ImageMessage)!.id}`]"
+    <video
       :src="`${baseUrl}/api/file/${(props.message.data[0] as ImageMessage)!.id}`"
-      fit="scale-down"
       :style="{ width: width, height: height }"
+      @click="clickVideo"
     />
     <div style="display: block">
       <div>
-        <el-text>类型: 图片</el-text>
+        <el-text>类型: 音频</el-text>
       </div>
       <div>
         <el-text>
@@ -22,6 +21,17 @@
         </template>
       </div>
     </div>
+    <el-dialog
+      v-model="visible"
+      center
+      fullscreen
+    >
+      <video
+        :src="`${baseUrl}/api/file/${(props.message.data[0] as ImageMessage)!.id}`"
+        style="height: 95vh; width: 95vh; margin: auto; display: flex;"
+        controls
+      />
+    </el-dialog>
   </div>
 </template>
 
@@ -29,6 +39,7 @@
 import { baseUrl } from '@/api/api'
 import moment from 'moment'
 import { type ImageMessage, type MessageData } from '@/api/type'
+import { ref } from 'vue'
 
 interface PropsType {
   message: MessageData
@@ -37,6 +48,10 @@ interface PropsType {
 }
 
 const props = defineProps<PropsType>()
+const visible = ref(false)
+const clickVideo = () => {
+  visible.value = true
+}
 </script>
 
 <style scoped>

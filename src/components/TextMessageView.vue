@@ -1,14 +1,9 @@
 <template>
   <div style="display: flex">
-    <el-image
-      :preview-src-list="[`${baseUrl}/api/file/${(props.message.data[0] as ImageMessage)!.id}`]"
-      :src="`${baseUrl}/api/file/${(props.message.data[0] as ImageMessage)!.id}`"
-      fit="scale-down"
-      :style="{ width: width, height: height }"
-    />
     <div style="display: block">
+      <el-text>{{ (props.message.data[0] as TextMessage).content }}</el-text>
       <div>
-        <el-text>类型: 图片</el-text>
+        <el-text>类型: 文本</el-text>
       </div>
       <div>
         <el-text>
@@ -16,7 +11,7 @@
         </el-text>
       </div>
       <div style="padding: 2px">
-        <el-text>tags: </el-text>
+        <el-text>tags:</el-text>
         <template v-for="tag of message.info.tags" :key="tag">
           <el-tag type="primary">{{ tag }}</el-tag>
         </template>
@@ -26,14 +21,11 @@
 </template>
 
 <script setup lang="ts">
-import { baseUrl } from '@/api/api'
 import moment from 'moment'
-import { type ImageMessage, type MessageData } from '@/api/type'
+import { type MessageData, type TextMessage } from '@/api/type'
 
 interface PropsType {
   message: MessageData
-  width: string
-  height: string
 }
 
 const props = defineProps<PropsType>()

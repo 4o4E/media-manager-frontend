@@ -70,11 +70,11 @@ import { requireAuth } from '@/api/auth'
 import { nextTick, ref } from 'vue'
 import { type MessageData } from '@/api/type'
 import { client } from '@/api/api'
-import ImageMessageView from '@/components/ImageMessageView.vue'
+import ImageMessageView from '@/components/message/view/ImageMessageView.vue'
 import { ElInput } from 'element-plus'
-import VideoMessageView from '@/components/VideoMessageView.vue'
-import TextMessageView from '@/components/TextMessageView.vue'
-import AudioMessageView from '@/components/AudioMessageView.vue'
+import VideoMessageView from '@/components/message/view/VideoMessageView.vue'
+import TextMessageView from '@/components/message/view/TextMessageView.vue'
+import AudioMessageView from '@/components/message/view/AudioMessageView.vue'
 
 requireAuth()
 

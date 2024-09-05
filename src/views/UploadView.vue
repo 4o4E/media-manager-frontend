@@ -18,10 +18,10 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import type { TabsPaneContext } from 'element-plus'
-import UploadImageView from '@/views/UploadImageView.vue'
-import UploadVideoView from '@/views/UploadVideoView.vue'
-import UploadAudioView from '@/views/UploadAudioView.vue'
-import UploadTextView from '@/views/UploadTextView.vue'
+import UploadImageView from '@/components/message/upload/UploadImageView.vue'
+import UploadVideoView from '@/components/message/upload/UploadVideoView.vue'
+import UploadAudioView from '@/components/message/upload/UploadAudioView.vue'
+import UploadTextView from '@/components/message/upload/UploadTextView.vue'
 
 const activeName = ref('图片')
 

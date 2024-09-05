@@ -33,11 +33,11 @@ import type { MessageData } from '@/api/type'
 import { client } from '@/api/api'
 import { ElMessage } from 'element-plus'
 import { ref } from 'vue'
-import ImageMessageView from '@/components/ImageMessageView.vue'
+import ImageMessageView from '@/components/message/view/ImageMessageView.vue'
 import InfiniteLoading from '@/components/InfiniteLoading.vue'
-import VideoMessageView from '@/components/VideoMessageView.vue'
-import AudioMessageView from '@/components/AudioMessageView.vue'
-import TextMessageView from '@/components/TextMessageView.vue'
+import VideoMessageView from '@/components/message/view/VideoMessageView.vue'
+import AudioMessageView from '@/components/message/view/AudioMessageView.vue'
+import TextMessageView from '@/components/message/view/TextMessageView.vue'
 
 requireAuth()
 

@@ -4,22 +4,24 @@
       <div :style="`flex: 1;`">
         <template v-for="(message, j) in column.messages" :key="j">
           <el-card style="margin: 1em">
-            <view-image
-              v-if="message.type == 'IMAGE'"
-              :message="message"
-            />
-            <view-video
-              v-else-if="message.type == 'VIDEO'"
-              :message="message"
-            />
-            <view-audio
-              v-else-if="message.type == 'AUDIO'"
-              :message="message"
-            />
-            <view-text
-              v-else-if="message.type == 'TEXT'"
-              :message="message"
-            />
+            <div @click="showDetail(message)">
+              <view-image
+                v-if="message.type == 'IMAGE'"
+                :message="message"
+              />
+              <view-video
+                v-else-if="message.type == 'VIDEO'"
+                :message="message"
+              />
+              <view-audio
+                v-else-if="message.type == 'AUDIO'"
+                :message="message"
+              />
+              <view-text
+                v-else-if="message.type == 'TEXT'"
+                :message="message"
+              />
+            </div>
             <tags :tags="message.tags" style="margin-top: 1em" />
           </el-card>
         </template>
@@ -27,6 +29,13 @@
       </div>
     </template>
     <InfiniteLoading v-if="columns.length === 0" :finished="finished" @infinite="loadData" />
+    <el-dialog
+      v-model="visible"
+      center
+      fullscreen
+    >
+     <message-detail ref="detail" :index="detailIndex" :messages="messages" @next="detailIndex += 1" @prev="detailIndex -= 1"/>
+    </el-dialog>
   </div>
 </template>
 
@@ -39,12 +48,21 @@ import ViewVideo from '@/components/message/view/ViewVideo.vue'
 import ViewText from '@/components/message/view/ViewText.vue'
 import InfiniteLoading from '@/components/InfiniteLoading.vue'
 import { onMounted, onUnmounted, ref } from 'vue'
+import MessageDetail from '@/components/message/MessageDetail.vue'
 
 type PropsType = {
   load: boolean
 }
 
 const props = defineProps<PropsType>()
+const visible = ref(false)
+const detailIndex = ref(0)
+const detail = ref()
+const showDetail = (message: MessageData) => {
+  if (detail.value) detail.value.resetTransform()
+  detailIndex.value = message.index
+  visible.value = true
+}
 
 const finished = ref(false)
 const fetchData = defineEmits(['fetch'])
@@ -92,6 +110,7 @@ const init = ref(false)
 
 const receive = (data: MessageData[]) => {
   messages.value.push(...data)
+  messages.value.forEach((e, i) => e.index = i)
   if (!init.value) {
     initColumns()
     init.value = true
@@ -99,7 +118,12 @@ const receive = (data: MessageData[]) => {
   fillColumns(data)
 }
 
-defineExpose({ receive })
+const clear = () => {
+  messages.value = []
+  initColumns()
+}
+
+defineExpose({ receive, clear })
 
 onMounted(() => {
   window.onresize = () => {

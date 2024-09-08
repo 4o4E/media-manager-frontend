@@ -26,7 +26,7 @@ const router = createRouter({
     {
       path: '/browser',
       name: 'browser',
-      component: () => import('@/views/BrowserView.vue')
+      component: () => import('@/views/SearchView.vue')
     },
     {
       path: '/random',

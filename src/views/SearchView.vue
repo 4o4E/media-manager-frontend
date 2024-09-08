@@ -22,7 +22,7 @@
         <el-button
           v-if="tags.size != 0"
           type="success"
-          @click="search"
+          @click="search(true)"
         >搜索
         </el-button>
       </div>
@@ -53,7 +53,7 @@ const load = ref(false)
 const queryMode = ref<0 | 1>(0)
 const flow = ref()
 
-const search = async () => {
+const search = async (clear: boolean = false) => {
   load.value = true
   const resp: BaseResp<MessageData[]> = await fetchData()
   if (!resp.success) {
@@ -63,6 +63,7 @@ const search = async () => {
     })
     return
   }
+  if (clear) flow.value.clear()
   flow.value.receive(resp.data!)
 }
 

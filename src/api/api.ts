@@ -34,3 +34,8 @@ export type BaseResp<R = void> = {
   message: string
   data?: R
 }
+
+export type PageResp<T> = {
+  data: T[]
+  total: number
+}

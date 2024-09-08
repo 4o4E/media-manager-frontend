@@ -61,11 +61,9 @@
 <script setup lang="ts">
 import { nextTick, ref } from 'vue'
 import type { UploadFile, UploadInstance, UploadProps, UploadRawFile } from 'element-plus'
-import { ElMessage, genFileId } from 'element-plus'
-import { client, uploadFile } from '@/api/api'
+import { ElInput, ElMessage, genFileId } from 'element-plus'
+import { type BaseResp, client, uploadFile } from '@/api/api'
 import { requireAuth } from '@/api/auth'
-import type { MessageData } from '@/api/type'
-import { ElInput } from 'element-plus'
 
 const inputValue = ref('')
 const inputVisible = ref(false)
@@ -98,12 +96,12 @@ const uploadedId = ref<string | null>()
 
 requireAuth()
 
-const videoDuration = ref<number>();
+const videoDuration = ref<number>()
 
 const handleLoadedMetadata = (event: Event) => {
-  const target = event.target as HTMLVideoElement;
+  const target = event.target as HTMLVideoElement
   if (target && target.duration) {
-    videoDuration.value = target.duration;
+    videoDuration.value = target.duration
   }
 }
 
@@ -128,7 +126,7 @@ const uploadAudioMessage = async () => {
   // 先上传文件
   uploadedId.value = await uploadFile(blob)
   if (!uploadedId.value) return
-  const resp = await client.put<MessageData | string>('/api/message', {
+  const resp = await client.put<BaseResp>('/api/message', {
     chain: [{
       id: uploadedId.value,
       type: 'audio',
@@ -136,14 +134,14 @@ const uploadAudioMessage = async () => {
       file: false,
       width: 0,
       height: 0,
-      length: Math.floor(videoDuration.value!),
+      length: Math.floor(videoDuration.value!)
     }],
     tags: Array.from(tags.value)
-  })
-  if (resp.status !== 200) {
+  }).then(e => e.data)
+  if (!resp.success) {
     ElMessage({
       type: 'warning',
-      message: resp.data as string
+      message: resp.message
     })
     return
   }

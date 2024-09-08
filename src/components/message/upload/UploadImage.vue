@@ -60,11 +60,9 @@
 <script setup lang="ts">
 import { nextTick, ref } from 'vue'
 import type { ImageViewerInstance, UploadFile, UploadInstance, UploadProps, UploadRawFile } from 'element-plus'
-import { ElMessage, genFileId } from 'element-plus'
-import { client, uploadFile } from '@/api/api'
+import { ElInput, ElMessage, genFileId } from 'element-plus'
+import { type BaseResp, client, uploadFile } from '@/api/api'
 import { requireAuth } from '@/api/auth'
-import type { MessageData } from '@/api/type'
-import { ElInput } from 'element-plus'
 
 const inputValue = ref('')
 const inputVisible = ref(false)
@@ -119,7 +117,7 @@ const uploadImageMessage = async () => {
   // 先上传文件
   uploadedId.value = await uploadFile(blob)
   if (!uploadedId.value) return
-  const resp = await client.put<MessageData | string>('/api/message', {
+  const resp = await client.put<BaseResp>('/api/message', {
     chain: [{
       id: uploadedId.value,
       type: 'image',
@@ -129,11 +127,11 @@ const uploadImageMessage = async () => {
       height: 0
     }],
     tags: Array.from(tags.value)
-  })
-  if (resp.status !== 200) {
+  }).then(e => e.data)
+  if (!resp.success) {
     ElMessage({
       type: 'warning',
-      message: resp.data as string
+      message: resp.message
     })
     return
   }

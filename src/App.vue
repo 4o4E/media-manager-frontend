@@ -1,12 +1,12 @@
 <template>
-  <div class="common-layout limit">
+  <div class="limit">
     <el-container>
       <!-- 菜单栏 -->
-      <el-header>
+      <el-header style="position: relative; height: 60px; padding: 0;">
         <menu-view />
       </el-header>
       <!-- 网页内容 -->
-      <el-container>
+      <el-container style="height: calc(98vh - 61px); margin: 0">
         <el-main>
           <router-view />
         </el-main>

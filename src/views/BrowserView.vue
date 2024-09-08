@@ -19,7 +19,6 @@
       />
       <el-button v-else @click="showInput">+</el-button>
       <div>
-        <!-- 确认上传 -->
         <el-button
           v-if="tags.size != 0"
           type="success"
@@ -35,60 +34,45 @@
       </div>
     </div>
   </div>
-  <el-divider/>
-  <div>
-    <template v-for="(item, i) in messages" :key="i">
-      <image-message-view
-        v-if="item.info.type == 'IMAGE'"
-        :message="item"
-        :width="'100px'"
-        :height="'100px'"
-      />
-      <video-message-view
-        v-else-if="item.info.type == 'VIDEO'"
-        :message="item"
-        :width="'100px'"
-        :height="'100px'"
-      />
-      <audio-message-view
-        v-else-if="item.info.type == 'AUDIO'"
-        :message="item"
-        :width="'100px'"
-        :height="'100px'"
-      />
-      <text-message-view
-        v-else-if="item.info.type == 'TEXT'"
-        :message="item"
-      />
-      <el-divider v-if="messages.length != i" />
-    </template>
-  </div>
+  <el-divider />
+  <MessageFlowView :load="load" ref="flow" @fetch="search" />
 </template>
 
 <script setup lang="ts">
 import { requireAuth } from '@/api/auth'
 import { nextTick, ref } from 'vue'
 import { type MessageData } from '@/api/type'
-import { client } from '@/api/api'
-import ImageMessageView from '@/components/message/view/ImageMessageView.vue'
-import { ElInput } from 'element-plus'
-import VideoMessageView from '@/components/message/view/VideoMessageView.vue'
-import TextMessageView from '@/components/message/view/TextMessageView.vue'
-import AudioMessageView from '@/components/message/view/AudioMessageView.vue'
+import { type BaseResp, client } from '@/api/api'
+import { ElInput, ElMessage } from 'element-plus'
+import MessageFlowView from '@/components/message/MessageFlowView.vue'
 
 requireAuth()
 
+const load = ref(false)
+
 const queryMode = ref<0 | 1>(0)
-const messages = ref<MessageData[]>([])
+const flow = ref()
 
 const search = async () => {
-  const resp = await client.post<MessageData[]>("/api/message", {
+  load.value = true
+  const resp: BaseResp<MessageData[]> = await fetchData()
+  if (!resp.success) {
+    ElMessage({
+      type: 'warning',
+      message: resp.message
+    })
+    return
+  }
+  flow.value.receive(resp.data!)
+}
+
+const fetchData = async () => {
+  return await client.post<BaseResp<MessageData[]>>('/api/message', {
     queryMode: queryMode.value,
     tags: Array.from(tags.value),
     count: 10,
     type: 'IMAGE'
-  })
-  messages.value = resp.data
+  }).then(e => e.data)
 }
 
 const tags = ref<Set<string>>(new Set())

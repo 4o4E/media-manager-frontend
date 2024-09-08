@@ -81,7 +81,7 @@
 <script setup lang="ts">
 import { reactive, ref } from 'vue'
 import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
-import { client } from '@/api/api'
+import { type BaseResp, client } from '@/api/api'
 import type { Login } from '@/api/type'
 import { auth } from '@/api/auth'
 import router from '@/router'
@@ -115,18 +115,17 @@ const login = async (form: FormInstance | undefined) => {
   if (!form) return
   await form.validate(async (valid) => {
     if (!valid) return
-    const resp = await client.post<Login | string>('/api/auth/login', loginForm)
-    // 状态码不是200代表请求出现错误, 此时body就是错误信息, 由后端提供
-    if (resp.status !== 200) {
+    const resp = await client.post<BaseResp<Login>>('/api/auth/login', loginForm).then(e => e.data)
+    if (!resp.success) {
       console.log(resp.data)
       ElMessage({
         type: 'warning',
-        message: resp.data as string
+        message: resp.message
       })
       return
     }
     // 保存用户信息
-    auth.value = resp.data as Login
+    auth.value = resp.data!
     // 跳转主界面
     await router.push('/')
     ElMessage({
@@ -160,8 +159,12 @@ const forgetRules = reactive<FormRules<ForgetForm>>({
 // 发送请求
 const forget = async (form: FormInstance | undefined) => {
   if (!form) return
-  await form.validate((valid) => {
-    if (valid) client.post('/api/auth/login', loginForm)
+  // await form.validate((valid) => {
+  //   if (valid) client.post('/api/auth/login', loginForm)
+  // })
+  ElMessage({
+    type: 'warning',
+    message: '还没做好咧'
   })
 }
 
@@ -197,8 +200,25 @@ const registerRules = reactive<FormRules<RegisterForm>>({
 // 发送请求
 const register = async (form: FormInstance | undefined) => {
   if (!form) return
-  await form.validate((valid) => {
-    if (valid) client.post('/api/auth/register', registerForm)
+  await form.validate(async (valid) => {
+    if (!valid) return
+    const resp = await client.post<BaseResp<Login>>('/api/auth/login', loginForm).then(e => e.data)
+    if (!resp.success) {
+      console.log(resp.data)
+      ElMessage({
+        type: 'warning',
+        message: resp.message
+      })
+      return
+    }
+    // 保存用户信息
+    auth.value = resp.data!
+    // 跳转主界面
+    await router.push('/')
+    ElMessage({
+      type: 'success',
+      message: '登录成功'
+    })
   })
 }
 </script>

@@ -18,15 +18,6 @@ export interface Login {
   perms: string[]
 }
 
-export interface MessageInfo {
-  id: string
-  upload: number
-  time: number
-  type: string
-  approved: number
-  tags: string[]
-}
-
 export interface AudioMessage {
   id: string
   format: string
@@ -40,7 +31,12 @@ export interface BinaryMessage {
   file: boolean
 }
 
-export interface ImageMessage {
+export interface HasSize {
+  width: number
+  height: number
+}
+
+export interface ImageMessage extends HasSize {
   id: string
   format: string
   file: boolean
@@ -48,23 +44,7 @@ export interface ImageMessage {
   height: number
 }
 
-export class ImageMessageImpl {
-  id: string
-  format: string
-  file: boolean
-  width: number
-  height: number
-
-  constructor(id: string, format: string, file: boolean, width: number, height: number) {
-    this.id = id
-    this.format = format
-    this.file = file
-    this.width = width
-    this.height = height
-  }
-}
-
-export interface VideoMessage {
+export interface VideoMessage extends HasSize {
   id: string
   format: string
   file: boolean
@@ -87,13 +67,12 @@ export interface MessageComment {
   time: number,
 }
 
-export interface MessageCommentList {
-  list: MessageComment[]
-  current: number
-}
-
 export interface MessageData {
-  info: MessageInfo
-  data: Message[]
-  comment: MessageCommentList
+  id: string
+  upload: number
+  time: number
+  type: string
+  approved: number
+  tags: string[]
+  content: Message[]
 }

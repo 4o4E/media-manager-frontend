@@ -87,7 +87,7 @@
 import { requireAuth } from '@/api/auth'
 import { type Role, type User } from '@/api/type'
 import { computed, ref, watch } from 'vue'
-import { client } from '@/api/api'
+import { type BaseResp, client } from '@/api/api'
 import { ElMessage, ElTable } from 'element-plus'
 import { Refresh } from '@element-plus/icons-vue'
 
@@ -140,16 +140,17 @@ const prevPage = async () => {
   await refresh()
 }
 const refresh = async () => {
-  const resp = await client.get<{ total: number, data: Role[] }>('/api/admin/roles', {
+  const resp = await client.get<BaseResp<{ total: number, data: Role[] }>>('/api/admin/roles', {
     params: { page: page.value, size: size.value }
-  })
-  if (resp.status !== 200) {
+  }).then(e => e.data)
+  if (!resp.success) {
     roles.value = []
     total.value = 0
-    return resp.data as any as string
+    return resp.message
   }
-  roles.value = resp.data.data
-  total.value = resp.data.total
+  const data = resp.data!
+  roles.value = data.data
+  total.value = data.total
   return null
 }
 
@@ -191,11 +192,11 @@ const delRole = async (row: User) => {
     })
     return
   }
-  const resp = await client.delete(`/api/admin/roles/${row.id}`)
-  if (resp.status !== 200) {
+  const resp = await client.delete<BaseResp>(`/api/admin/roles/${row.id}`).then(e => e.data)
+  if (!resp.success) {
     ElMessage({
       type: 'warning',
-      message: resp.data as string
+      message: resp.message
     })
     return
   }
@@ -215,12 +216,12 @@ const clickAdd = async () => {
 const addRoleForm = ref<AddRole>()
 const addRoleFormVisible = ref(false)
 const addRole = async () => {
-  const resp = await client.post('/api/admin/roles', addRoleForm.value)
+  const resp = await client.post<BaseResp>('/api/admin/roles', addRoleForm.value).then(e => e.data)
   addRoleFormVisible.value = false
-  if (resp.status !== 200) {
+  if (!resp.success) {
     ElMessage({
       type: 'warning',
-      message: resp.data as string
+      message: resp.message
     })
     return
   }
@@ -234,12 +235,12 @@ const addRole = async () => {
 const updateRoleForm = ref<Role>()
 const updateRoleFormVisible = ref(false)
 const updateRole = async () => {
-  const resp = await client.patch('/api/admin/roles', updateRoleForm.value)
+  const resp = await client.patch<BaseResp>('/api/admin/roles', updateRoleForm.value).then(e => e.data)
   updateRoleFormVisible.value = false
-  if (resp.status !== 200) {
+  if (!resp.success) {
     ElMessage({
       type: 'warning',
-      message: resp.data as string
+      message: resp.message
     })
     return
   }
@@ -258,19 +259,19 @@ interface Perm {
 const multipleTableRef = ref<InstanceType<typeof ElTable>>()
 const allPermList = ref<Perm[]>([])
 const updateAllPermList = async () => {
-  const resp = await client.get<string[]>('/api/admin/roles/allPerm')
-  if (resp.status !== 200) {
+  const resp = await client.get<BaseResp<string[]>>('/api/admin/roles/allPerm').then(e => e.data)
+  if (!resp.success) {
     ElMessage({
       type: 'warning',
       message: '获取权限节点列表失败, 请重试'
     })
     return
   }
-  allPermList.value = resp.data.map(e => ({ name: e }))
+  allPermList.value = resp.data!.map(e => ({ name: e }))
 }
 const updateCurrentRoleList = async (roleId: number) => {
-  const resp = await client.get<string[]>(`/api/admin/roles/${roleId}/perms`)
-  const perms = resp.data
+  const resp = await client.get<BaseResp<string[]>>(`/api/admin/roles/${roleId}/perms`).then(e => e.data)
+  const perms = resp.data!
   allPermList.value.filter(perm => perms.includes(perm.name)).forEach(e => {
     multipleTableRef.value!.toggleRowSelection(e, true)
   })
@@ -281,11 +282,11 @@ const allocateRoleFormVisible = ref(false)
 const allocateSelect = async (selection: Perm[], row: Perm) => {
   if (selection.includes(row)) {
     // 勾选操作
-    const resp = await client.post(`/api/admin/roles/${allocateRoleId.value}/perms/${row.name}`)
-    if (resp.status !== 200) {
+    const resp = await client.post<BaseResp>(`/api/admin/roles/${allocateRoleId.value}/perms/${row.name}`).then(e => e.data)
+    if (!resp.success) {
       ElMessage({
         type: 'warning',
-        message: resp.data as string
+        message: resp.message
       })
       allocateRoleFormVisible.value = false
       return
@@ -297,11 +298,11 @@ const allocateSelect = async (selection: Perm[], row: Perm) => {
     return
   }
   // 取消勾选
-  const resp = await client.delete(`/api/admin/roles/${allocateRoleId.value}/perms/${row.name}`)
-  if (resp.status !== 200) {
+  const resp = await client.delete<BaseResp>(`/api/admin/roles/${allocateRoleId.value}/perms/${row.name}`).then(e => e.data)
+  if (!resp.success) {
     ElMessage({
       type: 'warning',
-      message: resp.data as string
+      message: resp.message
     })
     allocateRoleFormVisible.value = false
     return

@@ -18,13 +18,19 @@ export const client = axios.create({
 export const uploadFile = async (blob: Blob): Promise<string | null> => {
   const formData = new FormData()
   formData.append('file', blob)
-  const resp = await client.putForm<string>("/api/file", formData)
-  if (resp.status !== 200) {
+  const resp = await client.putForm<BaseResp<string>>("/api/file", formData).then(e => e.data)
+  if (!resp.success) {
     ElMessage({
       type: 'warning',
-      message: resp.data
+      message: resp.message
     })
     return null
   }
-  return resp.data
+  return resp.data!
+}
+
+export type BaseResp<R = void> = {
+  success: boolean
+  message: string
+  data?: R
 }

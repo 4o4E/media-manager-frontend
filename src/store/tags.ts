@@ -35,7 +35,6 @@ export const useTagsStore = defineStore(tagsKey, {
         const tagDtoList = await client.get<BaseResp<Tags>>('/api/tags', {
           params: { size: 1000 }
         }).then(e => e.data)
-        console.log(tagDtoList)
         const tags = {}
         tagDtoList.data.forEach(tag => tags[tag.id] = tag)
         this.tags = tags

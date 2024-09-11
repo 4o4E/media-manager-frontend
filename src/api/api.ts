@@ -9,7 +9,7 @@ export const baseUrl = import.meta.env.VITE_APP_BASE_URL
  * 配置好的axios实例
  */
 export const client = axios.create({
-  baseURL: baseUrl,
+  // baseURL: baseUrl,
   timeout: 1000,
   headers: { 'Authorization': auth.value?.token },
   validateStatus: status => status < 500

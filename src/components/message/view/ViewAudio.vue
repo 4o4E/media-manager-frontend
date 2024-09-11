@@ -1,7 +1,7 @@
 <template>
   <div>
     <video
-      :src="`${baseUrl}/api/file/${(props.message.content[0] as ImageMessage)!.id}`"
+      :src="`/api/file/${(props.message.content[0] as ImageMessage)!.id}`"
       style="display: flex"
       @click="clickVideo"
     />
@@ -11,7 +11,7 @@
       fullscreen
     >
       <video
-        :src="`${baseUrl}/api/file/${(props.message.content[0] as ImageMessage)!.id}`"
+        :src="`/api/file/${(props.message.content[0] as ImageMessage)!.id}`"
         style="height: 95vh; width: 95vh; margin: auto; display: flex;"
         controls
       />
@@ -20,7 +20,6 @@
 </template>
 
 <script setup lang="ts">
-import { baseUrl } from '@/api/api'
 import { type ImageMessage, type MessageData } from '@/api/type'
 import { ref } from 'vue'
 

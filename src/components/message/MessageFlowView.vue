@@ -29,13 +29,9 @@
       </div>
     </template>
     <InfiniteLoading v-if="columns.length === 0" :finished="finished" @infinite="loadData" />
-    <el-dialog
-      v-model="visible"
-      center
-      fullscreen
-    >
-     <message-detail ref="detail" :index="detailIndex" :messages="messages" @next="detailIndex += 1" @prev="detailIndex -= 1"/>
-    </el-dialog>
+    <teleport to="body" v-if="visible">
+      <message-detail ref="detail" :message="messages[detailIndex]" @next="next" @prev="prev" @close="visible = false"/>
+    </teleport>
   </div>
 </template>
 
@@ -64,14 +60,28 @@ const showDetail = (message: MessageData) => {
   visible.value = true
 }
 
+const prev = () => {
+  if (detailIndex.value > 0) {
+    detailIndex.value -= 1
+  }
+}
+const next = () => {
+  const remain = messages.value.length - 1 - detailIndex.value
+
+  if (remain > 0) detailIndex.value += 1
+  if (remain < 5) {
+    emit('fetch')
+  }
+}
+
 const finished = ref(false)
-const fetchData = defineEmits(['fetch'])
+const emit = defineEmits(['fetch'])
 const lastFetch = ref(0)
 const loadData = () => {
   const now = Date.now()
   if (now - lastFetch.value < 300) return
   lastFetch.value = now
-  fetchData('fetch')
+  emit('fetch')
 }
 
 type Column = {

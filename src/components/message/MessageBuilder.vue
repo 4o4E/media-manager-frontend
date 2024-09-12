@@ -2,30 +2,31 @@
   <div v-if="data.length !== 0">
     <el-text size="large">内容</el-text>
     <!-- 内容 -->
-    <template v-for="(message, index) in data" :key="index">
+    <el-row v-for="(message, index) in data" :key="index">
       <img
         v-if="message.type === 'IMAGE'"
-        :src="`/api/file/${(message.content[0] as ImageMessage).id}`"
-        :alt="(message.content[0] as ImageMessage).id"
+        :src="(message as UnUploadImageMessage)?.url ?? ''"
+        alt="image"
+        style="max-width: 300px; max-height: 300px;"
       />
       <video
         v-if="message.type === 'VIDEO' || message.type === 'AUDIO'"
-        :src="`/api/file/${(message.content[0] as VideoMessage).id}`"
+        :src="(message as UnUploadVideoMessage)?.url ?? ''"
       />
       <el-text
         v-if="message.type === 'TEXT'"
-      >{{ (message.content[0] as TextMessage).content }}
+      >{{ (message as UnUploadTextMessage).content }}
       </el-text>
-    </template>
+    </el-row>
   </div>
+  <!-- 新增 -->
   <div>
     <el-text size="large">新增</el-text>
-    <!-- 新增 -->
     <el-button v-if="showAddBtn" @click="show"></el-button>
     <div v-else>
       <!-- 选择类型 -->
       <el-row>
-        <el-select v-model="chooseType" @change="changeType">
+        <el-select v-model="temp.type" @change="changeType">
           <el-option label="图片" value="IMAGE" />
           <el-option label="视频" value="VIDEO" />
           <el-option label="音频" value="AUDIO" />
@@ -34,23 +35,24 @@
       </el-row>
       <!-- 选择文件 -->
       <el-row>
-        <choose-file ref="choose" v-if="chooseType !== 'TEXT'" :choose-type="chooseType" />
-        <el-input v-else v-model="(temp as TextMessage).content" />
+        <choose-file ref="choose" v-if="temp.type !== 'TEXT'" :choose-type="temp.type" />
+        <el-input v-else v-model="(temp as UnUploadTextMessage).content" />
       </el-row>
       <el-row>
         <el-button
-          v-if="chooseType === 'TEXT'
-         ? (temp as TextMessage).content.length !== 0
-         : choose?.file != null
-        "
+          v-if="temp.type === 'TEXT'
+           ? (temp as UnUploadTextMessage).content.length !== 0
+           : choose?.file != null
+          "
           @click="addToData"
-        >添加</el-button>
+        >添加
+        </el-button>
       </el-row>
     </div>
   </div>
+  <!-- 输入tag -->
   <div>
     <el-text size="large">Tag</el-text>
-    <!-- 输入tag -->
     <el-row>
       <div>
         <el-tag
@@ -60,23 +62,23 @@
           :disable-transitions="false"
           size="large"
           @close="handleClose(tag)"
-        >{{ tag }}
+        >{{ tagStoreRef[tag].name }}
         </el-tag>
-        <el-input
-          v-if="inputVisible"
-          ref="InputRef"
+        <el-select-v2
           v-model="inputValue"
-          @keyup.enter="handleInputConfirm"
-          @blur="handleInputConfirm"
+          filterable
+          placeholder="选择Tag"
+          style="width: 120px"
+          :options="allTags"
         />
-        <el-button v-else @click="showInput">+</el-button>
+        <el-button v-if="inputValue != null" @click="addTag">+</el-button>
       </div>
     </el-row>
     <el-row>
       <div>
         <!-- 确认上传 -->
         <el-button
-          v-if="tags.size != 0"
+          v-if="tags.size != 0 && data.length !== 0"
           type="success"
           @click="uploadCompositeMessage"
         >上传
@@ -88,44 +90,46 @@
 </template>
 
 <script setup lang="ts">
-import type { ImageMessage, Message, TextMessage, VideoMessage } from '@/api/type'
-import { nextTick, ref } from 'vue'
+import { computed, ref } from 'vue'
 import ChooseFile from '@/components/message/choose/ChooseFile.vue'
-import { ElInput } from 'element-plus'
+import { ElInput, ElMessage, ElSelectV2 } from 'element-plus'
+import type { UnUploadImageMessage, UnUploadMessage, UnUploadTextMessage, UnUploadVideoMessage } from '@/api/upload'
+import { type BaseResp, client, uploadFile } from '@/api/api'
+import { useTagsStore } from '@/store/tags'
+import { storeToRefs } from 'pinia'
 
-const data = ref<Message[]>([])
+const data = ref<UnUploadMessage[]>([])
 const showAddBtn = ref<true>()
-const chooseType = ref<'IMAGE' | 'VIDEO' | 'AUDIO' | 'TEXT'>('IMAGE')
-const temp = ref<Message>()
-const inputValue = ref('')
-const inputVisible = ref(false)
-const InputRef = ref<InstanceType<typeof ElInput>>()
-const tags = ref(new Set<string>())
+const temp = ref<UnUploadMessage>({ type: 'IMAGE' })
+const inputValue = ref<number>()
+const tags = ref(new Set<number>())
 const choose = ref()
+const tagStore = useTagsStore()
+const { tags: tagStoreRef } = storeToRefs(tagStore)
+
+const allTags = computed(() => {
+  const all = []
+  for (let key in tagStoreRef.value) {
+    const e = tagStoreRef.value[key]
+    all.push(...e.alias.map(a => ({ label: a, value: e.id })))
+  }
+  return all
+})
 
 const handleClose = (tag: string) => {
   tags.value.delete(tag)
 }
 
-const showInput = () => {
-  inputVisible.value = true
-  nextTick(() => {
-    InputRef.value!.input!.focus()
-  })
-}
-
-const handleInputConfirm = () => {
-  if (inputValue.value) {
-    tags.value.add(inputValue.value)
-  }
-  inputVisible.value = false
-  inputValue.value = ''
+const addTag = () => {
+  tags.value.add(inputValue.value)
+  inputValue.value = undefined
 }
 
 const changeType = (t: 'IMAGE' | 'VIDEO' | 'AUDIO' | 'TEXT') => {
+  choose.value?.clear()
   switch (t) {
     case 'TEXT': {
-      temp.value = { content: '' }
+      temp.value = { content: '', type: 'TEXT' }
       return
     }
     case 'IMAGE':
@@ -133,12 +137,57 @@ const changeType = (t: 'IMAGE' | 'VIDEO' | 'AUDIO' | 'TEXT') => {
 }
 
 const addToData = () => {
-  // 其他元素需要额外上传文件
-  // if (chooseType.value !== 'TEXT') {
-  //   choose.value
-  // }
-  data.value.push(temp)
-  temp.value = undefined
+  data.value.push({
+    ...temp.value!, ...choose.value?.metaInfo ?? {},
+    url: choose.value?.fileUrl,
+    file: choose.value?.file
+  })
+  temp.value = { type: temp.value.type }
+  if (temp.value.type === 'TEXT') temp.value.content = ''
+  choose.value?.clear()
+}
+
+const uploadCompositeMessage = async () => {
+  // 上传各文件
+  const messages = await Promise.all(data.value.map(async (e: UnUploadMessage) => {
+    if (e.type === 'TEXT') {
+      return { type: 'text', content: (e as UnUploadTextMessage).content }
+    }
+    const rawFile = e.file!
+    const blob = new Blob([await rawFile.raw!.arrayBuffer()])
+    const id = await uploadFile(blob)
+    return {
+      id,
+      type: 'image',
+      format: rawFile.name.substring(rawFile.name.lastIndexOf('.') + 1),
+      file: false,
+      width: e.width,
+      height: e.height,
+      length: e.length
+    }
+  }))
+
+  const resp = await client.put<BaseResp>('/api/message', {
+    chain: messages,
+    tags: Array.from(tags.value)
+  }).then(e => e.data)
+  if (!resp.success) {
+    ElMessage({
+      type: 'warning',
+      message: resp.message
+    })
+    return
+  }
+  ElMessage({
+    type: 'success',
+    message: '上传成功'
+  })
+
+  // 清理objectUrl
+  data.value.forEach(e => {
+    if (e.url) URL.revokeObjectURL(e.url)
+  })
+  data.value = []
 }
 
 const show = () => {

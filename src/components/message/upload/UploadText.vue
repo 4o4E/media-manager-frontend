@@ -74,7 +74,6 @@ const handleInputConfirm = () => {
 }
 
 const tags = ref<Set<string>>(new Set())
-const uploadedId = ref<string | null>()
 
 requireAuth()
 
@@ -84,7 +83,6 @@ const text = ref('')
 const uploadImageMessage = async () => {
   const resp = await client.put<BaseResp>('/api/message', {
     chain: [{
-      id: uploadedId.value,
       type: 'text',
       content: text.value
     }],

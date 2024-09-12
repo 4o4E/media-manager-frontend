@@ -85,7 +85,7 @@ const isDown = ref(false)
 const isMove = ref(false)
 
 // 修改样式，减少回流重绘
-const setStyle = (el: HTMLElement, arr: string[]) => {
+const setStyle = (el?: HTMLElement, arr: string[]) => {
   if (el) el.style.cssText = el.style.cssText + arr.join(';') + ';'
 }
 const updateImage = () => {
@@ -182,7 +182,7 @@ onMounted(() => {
     y: (maxH - imgH.value) / 2
   }
   updateImage()
-  mask.value.addEventListener('mousewheel', onWheel, { passive: false })
+  mask.value!.addEventListener('mousewheel', onWheel, { passive: false })
   autoScale()
   window.onresize = onResize
   window.addEventListener('keyup', (e: KeyboardEvent) => {

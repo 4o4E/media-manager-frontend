@@ -36,6 +36,10 @@ export interface HasSize {
   height: number
 }
 
+export interface HasLength {
+  length: number
+}
+
 export interface ImageMessage extends HasSize {
   id: string
   format: string
@@ -63,7 +67,7 @@ export interface MessageComment {
   index: number
   sender: number
   type: 'Markdown' | 'HTML',
-  content: String,
+  content: string,
   time: number,
 }
 

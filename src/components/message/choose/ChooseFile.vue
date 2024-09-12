@@ -6,7 +6,7 @@
       v-if="chooseType === 'VIDEO'"
       style="max-width: 300px; max-height: 300px"
       :src="fileUrl"
-      @loadedmetadata="handleLoadedMetadata"
+      @loadedmetadata="handleVideoMetadata"
       controls
     />
     <img
@@ -14,6 +14,7 @@
       style="max-width: 300px; max-height: 300px"
       :src="fileUrl"
       alt="IMAGE"
+      @loadedmetadata="handleImageMetadata"
     />
   </div>
   <!-- 上传文件 -->
@@ -38,6 +39,7 @@ import { ref } from 'vue'
 import type { UploadFile, UploadInstance, UploadProps, UploadRawFile } from 'element-plus'
 import { genFileId } from 'element-plus'
 import { requireAuth } from '@/api/auth'
+import type { HasLength, HasSize } from '@/api/type'
 
 interface PropsType {
   chooseType: 'IMAGE' | 'VIDEO' | 'AUDIO'
@@ -61,21 +63,38 @@ const choose = {
 defineProps<PropsType>()
 const upload = ref<UploadInstance>()
 const file = ref<UploadFile>()
-const fileUrl = ref<string | undefined>()
+const fileUrl = ref<string>()
 
 requireAuth()
 
-const videoDuration = ref<number>()
+const metaInfo = ref<HasLength & HasSize>({})
 
 const clear = () => {
   file.value = undefined
+  fileUrl.value = undefined
+  metaInfo.value = {}
 }
 
-const handleLoadedMetadata = (event: Event) => {
+const handleVideoMetadata = (event: Event) => {
   const target = event.target as HTMLVideoElement
-  if (target && target.duration) {
-    videoDuration.value = target.duration
+  if (target) {
+    metaInfo.value = {
+      length: target.duration,
+      width: target.videoWidth,
+      height: target.videoHeight
+    }
   }
+}
+
+const handleImageMetadata = (event: Event) => {
+  const target = event.target as HTMLImageElement
+  if (target) {
+    metaInfo.value = {
+      width: target.width,
+      height: target.height
+    }
+  }
+
 }
 
 // 用于限制只上传一个文件
@@ -84,6 +103,7 @@ const handleExceed: UploadProps['onExceed'] = (files) => {
   upload.value!.clearFiles()
   const file = files[0] as UploadRawFile
   file.uid = genFileId()
+  metaInfo.value.format = file.name.substring(file.name.lastIndexOf("."))
   upload.value!.handleStart(file)
 }
 
@@ -94,7 +114,10 @@ const onChange = (uploadFile: UploadFile) => {
 }
 
 defineExpose({
-  file
+  file,
+  fileUrl,
+  metaInfo,
+  clear
 })
 </script>
 

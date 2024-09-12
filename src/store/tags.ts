@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import type { BaseResp, PageResp } from '@/api/api'
 import { client } from '@/api/api'
 import type { Tags } from '@/api/tag'
+import { now } from '@vueuse/core'
 
 type TagDto = {
   id: number
@@ -24,19 +25,23 @@ const tagsKey = 'tags'
 
 export const useTagsStore = defineStore(tagsKey, {
   state: () => ({
-    tags: [], // 数据字典
-    updateInterval: null // 定时器
+    tags: [],
+    updateInterval: null
   }),
 
   actions: {
     // 获取数据字典
     async fetchDictionary() {
       try {
-        const tagDtoList = await client.get<BaseResp<Tags>>('/api/tags', {
-          params: { size: 1000 }
-        }).then(e => e.data)
+        const resp = await client.get<BaseResp<Tags>>('/api/tags', {
+          params: {
+            size: 1000,
+            lastUpdated: this.tags.length !== 0 ? now() : null
+          }
+        })
+        if (resp.status === 304) return null
         const tags = {}
-        tagDtoList.data.forEach(tag => tags[tag.id] = tag)
+        resp.data.data.forEach(tag => tags[tag.id] = tag)
         this.tags = tags
       } catch (error) {
         console.error('更新tags时出现异常:', error)

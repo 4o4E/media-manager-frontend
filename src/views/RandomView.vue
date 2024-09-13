@@ -14,14 +14,14 @@ requireAuth()
 
 const flow = ref()
 
-const fetch = async () => {
+async function fetch() {
   const resp = await client.get<BaseResp<MessageData[]>>('/api/message/random', {
-    params: { count: 20 }
+    params: { count: 20 },
   }).then(e => e.data)
   if (!resp.success) {
     ElMessage({
       type: 'warning',
-      message: resp.message
+      message: resp.message,
     })
     return
   }

@@ -9,7 +9,6 @@ import { requireAuth } from '@/api/auth'
 import MessageBuilder from '@/components/message/MessageBuilder.vue'
 
 requireAuth()
-
 </script>
 
 <style scoped>

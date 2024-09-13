@@ -1,32 +1,22 @@
 import { defineStore } from 'pinia'
-import type { BaseResp, PageResp } from '@/api/api'
+import type { BaseResp } from '@/api/api'
 import { client } from '@/api/api'
 import type { Tags } from '@/api/tag'
 import { now } from '@vueuse/core'
 
-type TagDto = {
+interface TagDto {
   id: number
   name: string
   description: string
   alias: string[]
 }
 
-export const updateTags = async () => {
-  const tagDtoList = await client.get<BaseResp<PageResp<TagDto>>>('/api/tags', {
-    params: { size: 1000 }
-  }).then(e => e.data)
-  tags.value = tagDtoList.reduce((acc, tag) => {
-    acc[tag.id] = tag
-    return acc
-  })
-}
-
 const tagsKey = 'tags'
 
 export const useTagsStore = defineStore(tagsKey, {
   state: () => ({
-    tags: [],
-    updateInterval: null
+    tags: new Array<TagDto>(),
+    updateInterval: null,
   }),
 
   actions: {
@@ -36,8 +26,8 @@ export const useTagsStore = defineStore(tagsKey, {
         const resp = await client.get<BaseResp<Tags>>('/api/tags', {
           params: {
             size: 1000,
-            lastUpdated: this.tags.length !== 0 ? now() : null
-          }
+            lastUpdated: this.tags.length !== 0 ? now() : null,
+          },
         })
         if (resp.status === 304) return null
         const tags = {}
@@ -83,6 +73,6 @@ export const useTagsStore = defineStore(tagsKey, {
         clearInterval(this.updateInterval)
         this.updateInterval = null
       }
-    }
-  }
+    },
+  },
 })

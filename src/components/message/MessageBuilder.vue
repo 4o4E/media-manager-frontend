@@ -126,16 +126,16 @@ const allTags = computed(() => {
   return all
 })
 
-const handleClose = (tag: string) => {
+function handleClose(tag: string) {
   tags.value.delete(tag)
 }
 
-const addTag = () => {
+function addTag() {
   tags.value.add(inputValue.value)
   inputValue.value = undefined
 }
 
-const changeType = (t: 'IMAGE' | 'VIDEO' | 'AUDIO' | 'TEXT') => {
+function changeType(t: 'IMAGE' | 'VIDEO' | 'AUDIO' | 'TEXT') {
   choose.value?.clear()
   switch (t) {
     case 'TEXT': {
@@ -146,18 +146,18 @@ const changeType = (t: 'IMAGE' | 'VIDEO' | 'AUDIO' | 'TEXT') => {
   }
 }
 
-const addToData = () => {
+function addToData() {
   data.value.push({
     ...temp.value!, ...choose.value?.metaInfo ?? {},
     url: choose.value?.fileUrl,
-    file: choose.value?.file
+    file: choose.value?.file,
   })
   temp.value = { type: temp.value.type }
   if (temp.value.type === 'TEXT') temp.value.content = ''
   choose.value?.clear()
 }
 
-const uploadCompositeMessage = async () => {
+async function uploadCompositeMessage() {
   // 上传各文件
   const messages = await Promise.all(data.value.map(async (e: UnUploadMessage) => {
     if (e.type === 'TEXT') {
@@ -173,24 +173,24 @@ const uploadCompositeMessage = async () => {
       file: false,
       width: e.width,
       height: e.height,
-      length: e.length
+      length: e.length,
     }
   }))
 
   const resp = await client.put<BaseResp>('/api/message', {
     chain: messages,
-    tags: Array.from(tags.value)
+    tags: Array.from(tags.value),
   }).then(e => e.data)
   if (!resp.success) {
     ElMessage({
       type: 'warning',
-      message: resp.message
+      message: resp.message,
     })
     return
   }
   ElMessage({
     type: 'success',
-    message: '上传成功'
+    message: '上传成功',
   })
 
   // 清理objectUrl
@@ -200,12 +200,12 @@ const uploadCompositeMessage = async () => {
   data.value = []
 }
 
-const show = () => {
+function show() {
   showAddBtn.value = true
 }
 
 defineExpose({
-  data
+  data,
 })
 </script>
 

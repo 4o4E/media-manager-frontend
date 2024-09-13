@@ -35,7 +35,7 @@
 <script setup lang="ts">
 
 import { ref } from 'vue'
-import type { UploadFile, UploadInstance, UploadProps, UploadRawFile } from 'element-plus'
+import type { UploadFile, UploadInstance, UploadRawFile } from 'element-plus'
 import { genFileId } from 'element-plus'
 import { requireAuth } from '@/api/auth'
 import type { HasLength, HasSize } from '@/api/type'
@@ -48,16 +48,16 @@ interface PropsType {
 const choose = {
   IMAGE: {
     display: '图片',
-    accept: '.png, .jpg, .jpeg, .gif, .bmp'
+    accept: '.png, .jpg, .jpeg, .gif, .bmp',
   },
   VIDEO: {
     display: '视频',
-    accept: '.mp4, .avi'
+    accept: '.mp4, .avi',
   },
   AUDIO: {
     display: '音频',
-    accept: '.mp3, .flac, .m4a, .ogg'
-  }
+    accept: '.mp3, .flac, .m4a, .ogg',
+  },
 }
 
 defineProps<PropsType>()
@@ -69,46 +69,46 @@ requireAuth()
 
 const metaInfo = ref<HasLength & HasSize>({})
 
-const clear = () => {
+function clear() {
   file.value = undefined
   fileUrl.value = undefined
   metaInfo.value = {}
 }
 
-const handleVideoMetadata = (event: Event) => {
+function handleVideoMetadata(event: Event) {
   const target = event.target as HTMLVideoElement
   if (target) {
     metaInfo.value = {
       length: target.duration,
       width: target.videoWidth,
-      height: target.videoHeight
+      height: target.videoHeight,
     }
   }
 }
 
-const handleImageMetadata = (event: Event) => {
+function handleImageMetadata(event: Event) {
   const target = event.target as HTMLImageElement
   if (target) {
     metaInfo.value = {
       width: target.naturalWidth,
-      height: target.naturalHeight
+      height: target.naturalHeight,
     }
   }
 
 }
 
 // 用于限制只上传一个文件
-const handleExceed: UploadProps['onExceed'] = (files) => {
+function handleExceed(files) {
   console.log(upload.value)
   upload.value!.clearFiles()
   const file = files[0] as UploadRawFile
   file.uid = genFileId()
-  metaInfo.value.format = file.name.substring(file.name.lastIndexOf("."))
+  metaInfo.value.format = file.name.substring(file.name.lastIndexOf('.'))
   upload.value!.handleStart(file)
 }
 
 // 用来捕获上传的文件
-const onChange = (uploadFile: UploadFile) => {
+function onChange(uploadFile: UploadFile) {
   file.value = uploadFile
   fileUrl.value = URL.createObjectURL(uploadFile.raw!)
 }
@@ -117,7 +117,7 @@ defineExpose({
   file,
   fileUrl,
   metaInfo,
-  clear
+  clear,
 })
 </script>
 

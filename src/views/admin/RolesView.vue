@@ -9,7 +9,8 @@
       <template #default="{ row }">
         <el-button size="small" type="primary" @click="onClick(row, 'info')">编辑信息</el-button>
         <el-button size="small" type="info" @click="onClick(row, 'perm')">分配权限</el-button>
-        <el-button size="small" type="danger" @click="delRole(row)">删除角色</el-button>
+        <el-button v-if="row.id !== 1 && row.id !== 2" size="small" type="danger" @click="delRole(row)">删除角色
+        </el-button>
       </template>
     </el-table-column>
   </el-table>
@@ -51,10 +52,17 @@
   </el-dialog>
 
   <!-- 分配权限 -->
-  <el-dialog v-model="allocateRoleFormVisible" title="分配权限" width="50%">
-    <el-table ref="multipleTableRef" :data="allPermList" style="width: 100%" @select="allocateSelect">
+  <el-dialog v-model="allocateRoleFormVisible" title="分配权限" width="70%" top="5vh">
+    <el-table
+      ref="multipleTableRef"
+      :data="allPermList"
+      style="width: 100%; height: 80vh"
+      @select="allocateSelect"
+      stripe
+    >
       <el-table-column type="selection" width="55" />
-      <el-table-column prop="name" label="权限节点" />
+      <el-table-column prop="perm" label="权限节点" />
+      <el-table-column prop="desc" label="描述" />
     </el-table>
   </el-dialog>
 
@@ -69,7 +77,8 @@
           :type="page === p ? 'primary' : undefined"
           size="small"
           @click="page = p!;refresh()"
-        >{{ p }}</el-button>
+        >{{ p }}
+        </el-button>
         <el-tag v-else>...</el-tag>
       </template>
       <el-button v-if="hasNext()" size="small" @click="nextPage">&gt;</el-button>
@@ -85,7 +94,7 @@
 
 <script setup lang="ts">
 import { requireAuth } from '@/api/auth'
-import { type Role, type User } from '@/api/type'
+import type { Role, User } from '@/api/type'
 import { computed, ref, watch } from 'vue'
 import { type BaseResp, client } from '@/api/api'
 import { ElMessage, ElTable } from 'element-plus'
@@ -103,7 +112,7 @@ const size = ref(10)
 const pages = computed<(number | null)[]>(() => {
   const before = page.value <= 4
     ? [1, 2, 3, 4].filter(e => e < page.value)
-    : [1, null, page.value - 2, page.value - 1];
+    : [1, null, page.value - 2, page.value - 1]
   const totalPage = Math.ceil(total.value / size.value)
   const afterPages = totalPage - page.value
   const after = afterPages <= 4
@@ -113,35 +122,40 @@ const pages = computed<(number | null)[]>(() => {
   return [...before, page.value, ...after]
 })
 
-watch(size, () => refresh())
+watch(size, refresh)
 
-const hasNext = () => page.value * size.value < total.value
-const hasPrev = () => page.value > 1
-const nextPage = async () => {
+function hasNext() {
+  return page.value * size.value < total.value
+}
+
+function hasPrev() {
+  return page.value > 1
+}
+
+async function nextPage() {
   if (!hasNext()) {
-    ElMessage({
-      type: 'warning',
-      message: '已是最后一页'
-    })
+    ElMessage({ type: 'warning', message: '已是最后一页' })
     return
   }
   page.value++
   await refresh()
 }
-const prevPage = async () => {
+
+async function prevPage() {
   if (!hasPrev()) {
     ElMessage({
       type: 'warning',
-      message: '已是第一页'
+      message: '已是第一页',
     })
     return
   }
   page.value--
   await refresh()
 }
-const refresh = async () => {
+
+async function refresh() {
   const resp = await client.get<BaseResp<{ total: number, data: Role[] }>>('/api/admin/roles', {
-    params: { page: page.value, size: size.value }
+    params: { page: page.value, size: size.value },
   }).then(e => e.data)
   if (!resp.success) {
     roles.value = []
@@ -156,18 +170,15 @@ const refresh = async () => {
 
 refresh()
 
-const clickRefresh = async () => {
+async function clickRefresh() {
   const success = await refresh()
-  ElMessage(success ? {
-    type: 'warning',
-    message: success
-  } : {
-    type: 'success',
-    message: '刷新完成'
-  })
+  ElMessage(success
+    ? { type: 'warning', message: success }
+    : { type: 'success', message: '刷新完成' },
+  )
 }
 
-const onClick = async (row: Role, type: StatusType) => {
+async function onClick(row: Role, type: StatusType) {
   switch (type) {
     case 'info': {
       updateRoleForm.value = Object.assign({}, row)
@@ -184,11 +195,11 @@ const onClick = async (row: Role, type: StatusType) => {
   }
 }
 
-const delRole = async (row: User) => {
+async function delRole(row: User) {
   if (row.id === 1) {
     ElMessage({
       type: 'warning',
-      message: '不可删除'
+      message: '不可删除',
     })
     return
   }
@@ -196,7 +207,7 @@ const delRole = async (row: User) => {
   if (!resp.success) {
     ElMessage({
       type: 'warning',
-      message: resp.message
+      message: resp.message,
     })
     return
   }
@@ -209,107 +220,113 @@ interface AddRole {
   description: string
 }
 
-const clickAdd = async () => {
+const addRoleForm = ref<AddRole>()
+const addRoleFormVisible = ref(false)
+
+async function clickAdd() {
   addRoleForm.value = { name: '', description: '' }
   addRoleFormVisible.value = true
 }
-const addRoleForm = ref<AddRole>()
-const addRoleFormVisible = ref(false)
-const addRole = async () => {
+
+async function addRole() {
   const resp = await client.post<BaseResp>('/api/admin/roles', addRoleForm.value).then(e => e.data)
   addRoleFormVisible.value = false
   if (!resp.success) {
     ElMessage({
       type: 'warning',
-      message: resp.message
+      message: resp.message,
     })
     return
   }
   ElMessage({
     type: 'success',
-    message: '更新成功'
+    message: '更新成功',
   })
   await refresh()
 }
 
 const updateRoleForm = ref<Role>()
 const updateRoleFormVisible = ref(false)
-const updateRole = async () => {
+
+async function updateRole() {
   const resp = await client.patch<BaseResp>('/api/admin/roles', updateRoleForm.value).then(e => e.data)
   updateRoleFormVisible.value = false
   if (!resp.success) {
     ElMessage({
       type: 'warning',
-      message: resp.message
+      message: resp.message,
     })
     return
   }
   ElMessage({
     type: 'success',
-    message: '更新成功'
+    message: '更新成功',
   })
   await refresh()
 }
 
-
 interface Perm {
   name: string
+  desc: string
 }
 
 const multipleTableRef = ref<InstanceType<typeof ElTable>>()
 const allPermList = ref<Perm[]>([])
-const updateAllPermList = async () => {
+
+async function updateAllPermList() {
   const resp = await client.get<BaseResp<string[]>>('/api/admin/roles/allPerm').then(e => e.data)
   if (!resp.success) {
     ElMessage({
       type: 'warning',
-      message: '获取权限节点列表失败, 请重试'
+      message: '获取权限节点列表失败, 请重试',
     })
     return
   }
-  allPermList.value = resp.data!.map(e => ({ name: e }))
+  allPermList.value = resp.data!
 }
-const updateCurrentRoleList = async (roleId: number) => {
+
+async function updateCurrentRoleList(roleId: number) {
   const resp = await client.get<BaseResp<string[]>>(`/api/admin/roles/${roleId}/perms`).then(e => e.data)
   const perms = resp.data!
-  allPermList.value.filter(perm => perms.includes(perm.name)).forEach(e => {
+  allPermList.value.filter(perm => perms.includes(perm.perm)).forEach(e => {
     multipleTableRef.value!.toggleRowSelection(e, true)
   })
 }
 
 const allocateRoleId = ref<number>(0)
 const allocateRoleFormVisible = ref(false)
-const allocateSelect = async (selection: Perm[], row: Perm) => {
+
+async function allocateSelect(selection: Perm[], row: Perm) {
   if (selection.includes(row)) {
     // 勾选操作
-    const resp = await client.post<BaseResp>(`/api/admin/roles/${allocateRoleId.value}/perms/${row.name}`).then(e => e.data)
+    const resp = await client.post<BaseResp>(`/api/admin/roles/${allocateRoleId.value}/perms/${row.perm}`).then(e => e.data)
     if (!resp.success) {
       ElMessage({
         type: 'warning',
-        message: resp.message
+        message: resp.message,
       })
       allocateRoleFormVisible.value = false
       return
     }
     ElMessage({
       type: 'success',
-      message: '分配成功'
+      message: '分配成功',
     })
     return
   }
   // 取消勾选
-  const resp = await client.delete<BaseResp>(`/api/admin/roles/${allocateRoleId.value}/perms/${row.name}`).then(e => e.data)
+  const resp = await client.delete<BaseResp>(`/api/admin/roles/${allocateRoleId.value}/perms/${row.perm}`).then(e => e.data)
   if (!resp.success) {
     ElMessage({
       type: 'warning',
-      message: resp.message
+      message: resp.message,
     })
     allocateRoleFormVisible.value = false
     return
   }
   ElMessage({
     type: 'success',
-    message: '分配成功'
+    message: '分配成功',
   })
 }
 </script>

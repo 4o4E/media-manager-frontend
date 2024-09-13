@@ -20,7 +20,7 @@
       <el-button v-else @click="showInput">+</el-button>
       <div>
         <el-button
-          v-if="tags.size != 0"
+          v-if="tags.size !== 0"
           type="success"
           @click="search(true)"
         >搜索
@@ -41,8 +41,8 @@
 <script setup lang="ts">
 import { requireAuth } from '@/api/auth'
 import { nextTick, ref } from 'vue'
-import { type MessageData } from '@/api/type'
-import { type BaseResp, client } from '@/api/api'
+import type { MessageData } from '@/api/type'
+import type { BaseResp, client } from '@/api/api'
 import { ElInput, ElMessage } from 'element-plus'
 import MessageFlowView from '@/components/message/MessageFlowView.vue'
 
@@ -53,13 +53,18 @@ const load = ref(false)
 const queryMode = ref<0 | 1>(0)
 const flow = ref()
 
-const search = async (clear: boolean = false) => {
+const tags = ref<Set<string>>(new Set())
+const inputValue = ref('')
+const inputVisible = ref(false)
+const InputRef = ref<InstanceType<typeof ElInput>>()
+
+async function search(clear: boolean = false) {
   load.value = true
   const resp: BaseResp<MessageData[]> = await fetchData()
   if (!resp.success) {
     ElMessage({
       type: 'warning',
-      message: resp.message
+      message: resp.message,
     })
     return
   }
@@ -67,32 +72,27 @@ const search = async (clear: boolean = false) => {
   flow.value.receive(resp.data!)
 }
 
-const fetchData = async () => {
+async function fetchData() {
   return await client.post<BaseResp<MessageData[]>>('/api/message', {
     queryMode: queryMode.value,
     tags: Array.from(tags.value),
     count: 10,
-    type: 'IMAGE'
+    type: 'IMAGE',
   }).then(e => e.data)
 }
 
-const tags = ref<Set<string>>(new Set())
-const inputValue = ref('')
-const inputVisible = ref(false)
-const InputRef = ref<InstanceType<typeof ElInput>>()
-
-const handleClose = (tag: string) => {
+function handleClose(tag: string) {
   tags.value.delete(tag)
 }
 
-const showInput = () => {
+function showInput() {
   inputVisible.value = true
   nextTick(() => {
     InputRef.value!.input!.focus()
   })
 }
 
-const handleInputConfirm = () => {
+function handleInputConfirm() {
   if (inputValue.value) {
     tags.value.add(inputValue.value)
   }

@@ -88,27 +88,30 @@ const isMove = ref(false)
 const setStyle = (el?: HTMLElement, arr: string[]) => {
   if (el) el.style.cssText = el.style.cssText + arr.join(';') + ';'
 }
-const updateImage = () => {
+
+function updateImage() {
   setStyle(image.value, [
     `transform-origin: ${move.value.x}px ${move.value.y}px`,
-    `transform: scale(${scale.value}) translate(${move.value.x}px, ${move.value.y}px)`
+    `transform: scale(${scale.value}) translate(${move.value.x}px, ${move.value.y}px)`,
   ])
 }
 
-const next = () => {
+function next() {
   emit('next')
   nextTick(autoScale)
 }
-const prev = () => {
+
+function prev() {
   emit('prev')
   nextTick(autoScale)
 }
 
-const onWheel = (e: WheelEvent) => {
+function onWheel(e: WheelEvent) {
   if (!e.deltaY) return
   setScale(e.pageX, e.pageY, e.deltaY > 0 ? -0.1 : 0.1)
 }
-const onMouseDown = (e: MouseEvent) => {
+
+function onMouseDown(e: MouseEvent) {
   if (e.button === 2) return
   e.preventDefault()
   last.value.x = e.pageX
@@ -116,7 +119,8 @@ const onMouseDown = (e: MouseEvent) => {
   isDown.value = true
   isMove.value = false
 }
-const onMouseUp = (e: MouseEvent) => {
+
+function onMouseUp(e: MouseEvent) {
   if (e.button === 2) return
   if (!isMove.value) {
     emit('close')
@@ -126,7 +130,8 @@ const onMouseUp = (e: MouseEvent) => {
   isDown.value = false
   isMove.value = false
 }
-const onMouseMove = (e: MouseEvent) => {
+
+function onMouseMove(e: MouseEvent) {
   e.preventDefault()
   if (!isDown.value) return
   isMove.value = true
@@ -139,7 +144,7 @@ const onMouseMove = (e: MouseEvent) => {
   updateImage()
 }
 
-const setScale = (mouseX: number, mouseY: number, deltaScale: number) => {
+function setScale(mouseX: number, mouseY: number, deltaScale: number) {
   if (Math.min(imgW.value, imgH.value) * scale.value * (1 + deltaScale) < 100) return
 
   const { x: imgX, y: imgY } = move.value
@@ -150,7 +155,7 @@ const setScale = (mouseX: number, mouseY: number, deltaScale: number) => {
   updateImage()
 }
 
-const resetTransform = () => {
+function resetTransform() {
   scale.value = 1
   const { innerWidth: maxW, innerHeight: maxH } = window
   move.value = { x: (maxW - imgW.value) / 2, y: (maxH - imgH.value) / 2 }
@@ -158,10 +163,10 @@ const resetTransform = () => {
 }
 
 defineExpose({
-  resetTransform
+  resetTransform,
 })
 
-const autoScale = () => {
+function autoScale() {
   const { innerWidth: maxW, innerHeight: maxH } = window
   scale.value = Math.min((maxW - 80) / imgW.value, (maxH - 80) / imgH.value)
   move.value.x = (maxW - realW.value) / 2
@@ -169,7 +174,7 @@ const autoScale = () => {
   updateImage()
 }
 
-const onResize = () => {
+function onResize() {
   autoScale()
 }
 
@@ -179,7 +184,7 @@ onMounted(() => {
   scale.value = 1
   move.value = {
     x: (maxW - imgW.value) / 2,
-    y: (maxH - imgH.value) / 2
+    y: (maxH - imgH.value) / 2,
   }
   updateImage()
   mask.value!.addEventListener('mousewheel', onWheel, { passive: false })

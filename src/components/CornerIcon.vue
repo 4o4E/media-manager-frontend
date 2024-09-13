@@ -1,8 +1,8 @@
 <template>
-<div class="box">
-  <div class="corner" @click="emit('close')">&nbsp;+</div>
-  <slot></slot>
-</div>
+  <div class="box">
+    <div class="corner" @click="emit('close')">&nbsp;+</div>
+    <slot></slot>
+  </div>
 </template>
 
 <script setup lang="ts">

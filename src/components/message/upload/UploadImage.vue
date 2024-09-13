@@ -59,7 +59,7 @@
 
 <script setup lang="ts">
 import { nextTick, ref } from 'vue'
-import type { ImageViewerInstance, UploadFile, UploadInstance, UploadProps, UploadRawFile } from 'element-plus'
+import type { ImageViewerInstance, UploadFile, UploadInstance, UploadRawFile } from 'element-plus'
 import { ElInput, ElMessage, genFileId } from 'element-plus'
 import { type BaseResp, client, uploadFile } from '@/api/api'
 import { requireAuth } from '@/api/auth'
@@ -68,18 +68,18 @@ const inputValue = ref('')
 const inputVisible = ref(false)
 const InputRef = ref<InstanceType<typeof ElInput>>()
 
-const handleClose = (tag: string) => {
+function handleClose(tag: string) {
   tags.value.delete(tag)
 }
 
-const showInput = () => {
+function showInput() {
   inputVisible.value = true
   nextTick(() => {
     InputRef.value!.input!.focus()
   })
 }
 
-const handleInputConfirm = () => {
+function handleInputConfirm() {
   if (inputValue.value) {
     tags.value.add(inputValue.value)
   }
@@ -97,7 +97,7 @@ const image = ref<ImageViewerInstance>()
 requireAuth()
 
 // 用于限制只上传一个文件
-const handleExceed: UploadProps['onExceed'] = (files) => {
+function handleExceed(files) {
   console.log(upload.value)
   upload.value!.clearFiles()
   const file = files[0] as UploadRawFile
@@ -106,13 +106,13 @@ const handleExceed: UploadProps['onExceed'] = (files) => {
 }
 
 // 用来捕获上传的文件
-const onChange = (uploadFile: UploadFile) => {
+function onChange(uploadFile: UploadFile) {
   file.value = uploadFile
   fileUrl.value = URL.createObjectURL(uploadFile.raw!)
 }
-// 上传图片消息
-const uploadImageMessage = async () => {
 
+// 上传图片消息
+async function uploadImageMessage() {
   const blob = new Blob([await file.value!.raw!.arrayBuffer()])
   // 先上传文件
   uploadedId.value = await uploadFile(blob)
@@ -124,20 +124,20 @@ const uploadImageMessage = async () => {
       format: file.value!.name.substring(file.value!.name.lastIndexOf('.') + 1),
       file: false,
       width: 0,
-      height: 0
+      height: 0,
     }],
-    tags: Array.from(tags.value)
+    tags: Array.from(tags.value),
   }).then(e => e.data)
   if (!resp.success) {
     ElMessage({
       type: 'warning',
-      message: resp.message
+      message: resp.message,
     })
     return
   }
   ElMessage({
     type: 'success',
-    message: '上传成功'
+    message: '上传成功',
   })
   file.value = null
   tags.value.clear()

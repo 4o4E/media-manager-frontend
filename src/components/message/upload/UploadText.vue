@@ -54,18 +54,18 @@ const inputValue = ref('')
 const inputVisible = ref(false)
 const InputRef = ref<InstanceType<typeof ElInput>>()
 
-const handleClose = (tag: string) => {
+function handleClose(tag: string) {
   tags.value.delete(tag)
 }
 
-const showInput = () => {
+function showInput() {
   inputVisible.value = true
   nextTick(() => {
     InputRef.value!.input!.focus()
   })
 }
 
-const handleInputConfirm = () => {
+function handleInputConfirm() {
   if (inputValue.value) {
     tags.value.add(inputValue.value)
   }
@@ -80,24 +80,24 @@ requireAuth()
 const text = ref('')
 
 // 上传图片消息
-const uploadImageMessage = async () => {
+async function uploadImageMessage() {
   const resp = await client.put<BaseResp>('/api/message', {
     chain: [{
       type: 'text',
-      content: text.value
+      content: text.value,
     }],
-    tags: Array.from(tags.value)
+    tags: Array.from(tags.value),
   }).then(e => e.data)
   if (!resp.success) {
     ElMessage({
       type: 'warning',
-      message: resp.message
+      message: resp.message,
     })
     return
   }
   ElMessage({
     type: 'success',
-    message: '上传成功'
+    message: '上传成功',
   })
   text.value = ''
   tags.value.clear()

@@ -30,7 +30,8 @@
     </template>
     <InfiniteLoading v-if="columns.length === 0" :finished="finished" @infinite="loadData" />
     <teleport to="body" v-if="visible">
-      <message-detail ref="detail" :message="messages[detailIndex]" @next="next" @prev="prev" @close="visible = false"/>
+      <message-detail ref="detail" :message="messages[detailIndex]" @next="next" @prev="prev"
+                      @close="visible = false" />
     </teleport>
   </div>
 </template>
@@ -54,18 +55,20 @@ const props = defineProps<PropsType>()
 const visible = ref(false)
 const detailIndex = ref(0)
 const detail = ref()
-const showDetail = (message: MessageData) => {
+
+function showDetail(message: MessageData) {
   if (detail.value) detail.value.resetTransform()
   detailIndex.value = message.index
   visible.value = true
 }
 
-const prev = () => {
+function prev() {
   if (detailIndex.value > 0) {
     detailIndex.value -= 1
   }
 }
-const next = () => {
+
+function next() {
   const remain = messages.value.length - 1 - detailIndex.value
 
   if (remain > 0) detailIndex.value += 1
@@ -77,7 +80,8 @@ const next = () => {
 const finished = ref(false)
 const emit = defineEmits(['fetch'])
 const lastFetch = ref(0)
-const loadData = () => {
+
+function loadData() {
   const now = Date.now()
   if (now - lastFetch.value < 300) return
   lastFetch.value = now
@@ -92,7 +96,7 @@ type Column = {
 const columnWidth = 600
 const columns = ref<Column[]>([])
 
-const initColumns = () => {
+function initColumns() {
   const width = document.body.clientWidth > 800 ? document.body.clientWidth * .8 : document.body.clientWidth
   let columnCount = Math.floor(width / columnWidth)
   if (columnCount === 0) columnCount = 1
@@ -102,7 +106,7 @@ const initColumns = () => {
   }
 }
 
-const fillColumns = (messages: MessageData[]) => {
+function fillColumns(messages: MessageData[]) {
   // 遍历所有元素
   for (const message of messages) {
     // 找到高度最小的列
@@ -119,7 +123,7 @@ const fillColumns = (messages: MessageData[]) => {
 const messages = ref<MessageData[]>([])
 const init = ref(false)
 
-const receive = (data: MessageData[]) => {
+function receive(data: MessageData[]) {
   messages.value.push(...data)
   messages.value.forEach((e, i) => e.index = i)
   if (!init.value) {
@@ -129,7 +133,7 @@ const receive = (data: MessageData[]) => {
   fillColumns(data)
 }
 
-const clear = () => {
+function clear() {
   messages.value = []
   initColumns()
 }

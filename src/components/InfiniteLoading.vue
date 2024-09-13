@@ -26,8 +26,8 @@ useIntersectionObserver(
     if (isIntersecting && !props.finished) emit('infinite')
   },
   {
-    threshold: 1
-  }
+    threshold: 1,
+  },
 )
 </script>
 

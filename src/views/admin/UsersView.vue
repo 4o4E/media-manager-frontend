@@ -106,7 +106,7 @@
 
 <script setup lang="ts">
 import { auth, requireAuth } from '@/api/auth'
-import { type Role, type User } from '@/api/type'
+import type { Role, User } from '@/api/type'
 import { computed, ref, watch } from 'vue'
 import { type BaseResp, client } from '@/api/api'
 import { ElMessage, ElTable } from 'element-plus'
@@ -134,35 +134,43 @@ const pages = computed<(number | null)[]>(() => {
   return [...before, page.value, ...after]
 })
 
-watch(size, () => refresh())
+watch(size, refresh)
 
-const hasNext = () => page.value * size.value < total.value
-const hasPrev = () => page.value > 1
-const nextPage = async () => {
+function hasNext() {
+  return page.value * size.value < total.value
+}
+
+function hasPrev() {
+  return page.value > 1
+}
+
+async function nextPage() {
   if (!hasNext()) {
     ElMessage({
       type: 'warning',
-      message: '已是最后一页'
+      message: '已是最后一页',
     })
     return
   }
   page.value++
   await refresh()
 }
-const prevPage = async () => {
+
+async function prevPage() {
   if (!hasPrev()) {
     ElMessage({
       type: 'warning',
-      message: '已是第一页'
+      message: '已是第一页',
     })
     return
   }
   page.value--
   await refresh()
 }
-const refresh = async () => {
+
+async function refresh() {
   const resp = await client.get<BaseResp<{ total: number, data: User[] }>>('/api/admin/users', {
-    params: { page: page.value, size: size.value }
+    params: { page: page.value, size: size.value },
   }).then(e => e.data)
   if (!resp.success) {
     users.value = []
@@ -177,18 +185,15 @@ const refresh = async () => {
 
 refresh()
 
-const clickRefresh = async () => {
+async function clickRefresh() {
   const success = await refresh()
-  ElMessage(success ? {
-    type: 'warning',
-    message: success
-  } : {
-    type: 'success',
-    message: '刷新完成'
-  })
+  ElMessage(success
+    ? { type: 'warning', message: success }
+    : { type: 'success', message: '刷新完成' },
+  )
 }
 
-const onClick = async (row: User, type: StatusType) => {
+async function onClick(row: User, type: StatusType) {
   switch (type) {
     case 'info': {
       updateUserForm.value = Object.assign({}, row)
@@ -198,7 +203,7 @@ const onClick = async (row: User, type: StatusType) => {
     case 'password': {
       updatePasswordForm.value = {
         id: row.id,
-        password: ''
+        password: '',
       }
       updatePasswordFormVisible.value = true
       break
@@ -207,7 +212,7 @@ const onClick = async (row: User, type: StatusType) => {
       if (row.id === auth!.value?.userId) {
         ElMessage({
           type: 'warning',
-          message: '不可修改'
+          message: '不可修改',
         })
         return
       }
@@ -220,11 +225,11 @@ const onClick = async (row: User, type: StatusType) => {
   }
 }
 
-const delUser = async (row: User) => {
+async function delUser(row: User) {
   if (row.id === 1) {
     ElMessage({
       type: 'warning',
-      message: '不可删除'
+      message: '不可删除',
     })
     return
   }
@@ -232,7 +237,7 @@ const delUser = async (row: User) => {
   if (!resp.success) {
     ElMessage({
       type: 'warning',
-      message: resp.message
+      message: resp.message,
     })
     return
   }
@@ -246,44 +251,47 @@ interface AddUser {
   password: string
 }
 
-const clickAdd = async () => {
+const addUserForm = ref<AddUser>()
+const addUserFormVisible = ref(false)
+
+async function clickAdd() {
   addUserForm.value = { name: '', password: '', point: 0 }
   addUserFormVisible.value = true
 }
-const addUserForm = ref<AddUser>()
-const addUserFormVisible = ref(false)
-const addUser = async () => {
+
+async function addUser() {
   const resp = await client.post<BaseResp>('/api/admin/users', addUserForm.value).then(e => e.data)
   addUserFormVisible.value = false
   if (!resp.success) {
     ElMessage({
       type: 'warning',
-      message: resp.message
+      message: resp.message,
     })
     return
   }
   ElMessage({
     type: 'success',
-    message: '更新成功'
+    message: '更新成功',
   })
   await refresh()
 }
 
 const updateUserForm = ref<User>()
 const updateUserFormVisible = ref(false)
-const updateUser = async () => {
+
+async function updateUser() {
   const resp = await client.patch<BaseResp>('/api/admin/users', updateUserForm.value).then(e => e.data)
   updateUserFormVisible.value = false
   if (!resp.success) {
     ElMessage({
       type: 'warning',
-      message: resp.message
+      message: resp.message,
     })
     return
   }
   ElMessage({
     type: 'success',
-    message: '更新成功'
+    message: '更新成功',
   })
   await refresh()
 }
@@ -295,32 +303,32 @@ interface UpdatePasswordForm {
 
 const updatePasswordForm = ref<UpdatePasswordForm>()
 const updatePasswordFormVisible = ref(false)
-const updatePassword = async () => {
+
+async function updatePassword() {
   const resp = await client.post<BaseResp>('/api/admin/users/password', updatePasswordForm.value).then(e => e.data)
   updatePasswordFormVisible.value = false
-  ElMessage(resp.success ? {
-    type: 'success',
-    message: '更新成功'
-  } : {
-    type: 'warning',
-    message: resp.message
-  })
+  ElMessage(resp.success
+    ? { type: 'success', message: '更新成功' }
+    : { type: 'warning', message: resp.message },
+  )
 }
 
 const multipleTableRef = ref<InstanceType<typeof ElTable>>()
 const allRoleList = ref<Role[]>([])
-const updateAllRoleList = async () => {
+
+async function updateAllRoleList() {
   const resp = await client.get<BaseResp<Role[]>>('/api/admin/roles/all').then(e => e.data)
   if (!resp.success) {
     ElMessage({
       type: 'warning',
-      message: '获取角色列表失败, 请重试'
+      message: '获取角色列表失败, 请重试',
     })
     return
   }
   allRoleList.value = resp.data!
 }
-const updateUserRoleList = async (uid: number) => {
+
+async function updateUserRoleList(uid: number) {
   const resp = await client.get<BaseResp<Role[]>>(`/api/admin/users/${uid}/roles`).then(e => e.data)
   const ids = resp.data!.map(e => e.id)
   allRoleList.value.filter(role => ids.includes(role.id)).forEach(e => {
@@ -330,21 +338,22 @@ const updateUserRoleList = async (uid: number) => {
 
 const allocateUserId = ref<number>(0)
 const allocateRoleFormVisible = ref(false)
-const allocateSelect = async (selection: Role[], row: Role) => {
+
+async function allocateSelect(selection: Role[], row: Role) {
   if (selection.includes(row)) {
     // 勾选操作
     const resp = await client.post<BaseResp>(`/api/admin/users/${allocateUserId.value}/roles/${row.id}`).then(e => e.data)
     if (!resp.success) {
       ElMessage({
         type: 'warning',
-        message: resp.message
+        message: resp.message,
       })
       allocateRoleFormVisible.value = false
       return
     }
     ElMessage({
       type: 'success',
-      message: '分配成功'
+      message: '分配成功',
     })
     return
   }
@@ -353,14 +362,14 @@ const allocateSelect = async (selection: Role[], row: Role) => {
   if (!resp.success) {
     ElMessage({
       type: 'warning',
-      message: resp.message
+      message: resp.message,
     })
     allocateRoleFormVisible.value = false
     return
   }
   ElMessage({
     type: 'success',
-    message: '分配成功'
+    message: '分配成功',
   })
 }
 </script>

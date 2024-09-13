@@ -1,18 +1,14 @@
-// 样式
-import './assets/main.css' // 自定义样式
-import "element-plus/dist/index.css"; // 默认样式
-import 'element-plus/theme-chalk/dark/css-vars.css' // 深色样式
-import * as ElementPlusIconsVue from '@element-plus/icons-vue' // 图标
-
 import { createApp } from 'vue'
-
-// 组件库
-import ElementPlus from 'element-plus'
-// 路由
-import router from './router'
-import App from './App.vue'
-import { createPinia } from 'pinia'
+import './assets/main.css'
+import 'element-plus/dist/index.css'
+import 'element-plus/theme-chalk/dark/css-vars.css'
+import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 import { useTagsStore } from '@/store/tags'
+import { createPinia } from 'pinia'
+
+import ElementPlus from 'element-plus'
+import App from './App.vue'
+import router from './router'
 
 const app = createApp(App)
 const pinia = createPinia()

@@ -6,11 +6,10 @@ import { nextTick, ref, watch } from 'vue'
 /**
  * 当前登录信息
  */
-export const auth = ref<Login | null>((() => {
+export const auth = ref<Login>((() => {
   // 初始化时从localStorage中读取
   const data = localStorage.getItem('TOKEN')
-  if (!data) return null
-  return JSON.parse(data)
+  return data ? JSON.parse(data) : undefined
 })())
 
 // 登录状态变更时
@@ -29,7 +28,7 @@ export function requireAuth() {
   if (auth.value === null) {
     ElMessage({
       type: 'warning',
-      message: '请先登录'
+      message: '请先登录',
     })
     nextTick(() => router.push('/login'))
   }

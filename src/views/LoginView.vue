@@ -41,8 +41,10 @@
         </el-select>
       </el-form-item>
       <el-form-item :label="forgetForm.type === 'email' ? '邮箱' : '手机号'" prop="value">
-        <el-input v-model="forgetForm.value"
-                  :placeholder="`请输入${forgetForm.type === 'email' ? '邮箱' : '手机号'}`" />
+        <el-input
+          v-model="forgetForm.value"
+          :placeholder="`请输入${forgetForm.type === 'email' ? '邮箱' : '手机号'}`"
+        />
       </el-form-item>
       <el-form-item>
         <el-button type="primary" @click="forget(forgetFormRef)">找回</el-button>
@@ -94,9 +96,10 @@ const type = ref<PageType>('login')
 
 // 表单数据模型
 interface LoginForm {
-  username: string | null,
+  username: string | null
   password: string | null
 }
+
 // 表单实例
 const loginFormRef = ref<FormInstance>()
 // 表单数据
@@ -104,14 +107,15 @@ const loginForm = reactive<LoginForm>({ username: null, password: null })
 // 校验规则
 const loginRules = reactive<FormRules<LoginForm>>({
   username: [
-    { required: true, message: '请输入用户名', trigger: 'blur' }
+    { required: true, message: '请输入用户名', trigger: 'blur' },
   ],
   password: [
-    { required: true, message: '请输入密码', trigger: 'blur' }
-  ]
+    { required: true, message: '请输入密码', trigger: 'blur' },
+  ],
 })
+
 // 发送请求
-const login = async (form: FormInstance | undefined) => {
+async function login(form: FormInstance | undefined) {
   if (!form) return
   await form.validate(async (valid) => {
     if (!valid) return
@@ -120,7 +124,7 @@ const login = async (form: FormInstance | undefined) => {
       console.log(resp.data)
       ElMessage({
         type: 'warning',
-        message: resp.message
+        message: resp.message,
       })
       return
     }
@@ -130,7 +134,7 @@ const login = async (form: FormInstance | undefined) => {
     await router.push('/')
     ElMessage({
       type: 'success',
-      message: '登录成功'
+      message: '登录成功',
     })
   })
 }
@@ -139,10 +143,12 @@ const login = async (form: FormInstance | undefined) => {
 
 // 表单数据模型
 type ForgetType = 'email' | 'sms'
+
 interface ForgetForm {
   type: ForgetType,
   value: string | null
 }
+
 // 表单实例
 const forgetFormRef = ref<FormInstance>()
 // 表单数据
@@ -150,21 +156,22 @@ const forgetForm = reactive<ForgetForm>({ type: 'email', value: null })
 // 校验规则
 const forgetRules = reactive<FormRules<ForgetForm>>({
   type: [
-    { required: true, trigger: 'blur' }
+    { required: true, trigger: 'blur' },
   ],
   value: [
-    { required: true, message: '请输入用户名', trigger: 'blur' }
-  ]
+    { required: true, message: '请输入用户名', trigger: 'blur' },
+  ],
 })
+
 // 发送请求
-const forget = async (form: FormInstance | undefined) => {
+async function forget(form: FormInstance | undefined) {
   if (!form) return
   // await form.validate((valid) => {
   //   if (valid) client.post('/api/auth/login', loginForm)
   // })
   ElMessage({
     type: 'warning',
-    message: '还没做好咧'
+    message: '还没做好咧',
   })
 }
 
@@ -176,29 +183,31 @@ interface RegisterForm {
   password: string | null
   passwordConfirm: string | null
 }
+
 // 表单实例
 const registerFormRef = ref<FormInstance>()
 // 表单数据
 const registerForm = reactive<RegisterForm>({
   username: '',
   password: '',
-  passwordConfirm: ''
+  passwordConfirm: '',
 })
 // 校验规则
 const registerRules = reactive<FormRules<RegisterForm>>({
   username: [
     { required: true, message: '请输入用户名', trigger: 'blur' },
-    { min: 3, max: 16, message: '用户名长度必须在3-16内', trigger: 'blur' }
+    { min: 3, max: 16, message: '用户名长度必须在3-16内', trigger: 'blur' },
   ],
   password: [
-    { required: true, message: '请输入密码', trigger: 'blur' }
+    { required: true, message: '请输入密码', trigger: 'blur' },
   ],
   passwordConfirm: [
-    { required: true, message: '请重复密码', trigger: 'blur' }
-  ]
+    { required: true, message: '请重复密码', trigger: 'blur' },
+  ],
 })
+
 // 发送请求
-const register = async (form: FormInstance | undefined) => {
+async function register(form: FormInstance | undefined) {
   if (!form) return
   await form.validate(async (valid) => {
     if (!valid) return
@@ -207,7 +216,7 @@ const register = async (form: FormInstance | undefined) => {
       console.log(resp.data)
       ElMessage({
         type: 'warning',
-        message: resp.message
+        message: resp.message,
       })
       return
     }
@@ -217,7 +226,7 @@ const register = async (form: FormInstance | undefined) => {
     await router.push('/')
     ElMessage({
       type: 'success',
-      message: '登录成功'
+      message: '登录成功',
     })
   })
 }

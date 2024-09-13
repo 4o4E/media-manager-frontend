@@ -11,31 +11,26 @@ export const baseUrl = import.meta.env.VITE_APP_BASE_URL
 export const client = axios.create({
   // baseURL: baseUrl,
   timeout: 1000,
-  headers: { 'Authorization': auth.value?.token },
-  validateStatus: status => status < 500
-});
+  headers: { Authorization: auth.value?.token },
+  validateStatus: status => status < 500,
+})
 
-export const uploadFile = async (blob: Blob): Promise<string | null> => {
+export async function uploadFile(blob: Blob): Promise<string | null> {
   const formData = new FormData()
   formData.append('file', blob)
-  const resp = await client.putForm<BaseResp<string>>("/api/file", formData).then(e => e.data)
+  const resp = await client.putForm<BaseResp<string>>('/api/file', formData).then(e => e.data)
   if (!resp.success) {
     ElMessage({
       type: 'warning',
-      message: resp.message
+      message: resp.message,
     })
     return null
   }
   return resp.data!
 }
 
-export type BaseResp<R = void> = {
+export interface BaseResp<R = void> {
   success: boolean
   message: string
   data?: R
-}
-
-export type PageResp<T> = {
-  data: T[]
-  total: number
 }

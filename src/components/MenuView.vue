@@ -11,8 +11,9 @@
     <el-menu-item index="/random">浏览</el-menu-item>
     <el-menu-item index="/browser">搜索</el-menu-item>
     <el-menu-item index="/upload">上传</el-menu-item>
-    <el-menu-item v-if="auth?.perms?.includes('user:get')" index="/users">用户管理</el-menu-item>
-    <el-menu-item v-if="auth?.perms?.includes('role:get')" index="/roles">角色管理</el-menu-item>
+    <el-menu-item v-if="auth?.perms?.includes('user:view')" index="/users">用户管理</el-menu-item>
+    <el-menu-item v-if="auth?.perms?.includes('role:view')" index="/roles">角色管理</el-menu-item>
+    <el-menu-item v-if="auth?.perms?.includes('tag:edit')" index="/tags">Tag管理</el-menu-item>
 
     <div class="flex-grow" />
 

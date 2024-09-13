@@ -29,7 +29,8 @@ interface PropsType {
 
 const props = defineProps<PropsType>()
 const visible = ref(false)
-const clickVideo = () => {
+
+function clickVideo() {
   visible.value = true
 }
 </script>

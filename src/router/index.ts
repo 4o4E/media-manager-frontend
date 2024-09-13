@@ -6,44 +6,49 @@ const router = createRouter({
     {
       path: '/',
       name: 'home',
-      component: () => import('@/views/HomeView.vue')
+      component: () => import('@/views/HomeView.vue'),
     },
     {
       path: '/login',
       name: 'login',
-      component: () => import('@/views/LoginView.vue')
+      component: () => import('@/views/LoginView.vue'),
     },
     {
       path: '/logout',
       name: 'logout',
-      component: () => import('@/views/LogoutView.vue')
+      component: () => import('@/views/LogoutView.vue'),
     },
     {
       path: '/upload',
       name: 'upload',
-      component: () => import('@/views/UploadView.vue')
+      component: () => import('@/views/UploadView.vue'),
     },
     {
       path: '/browser',
       name: 'browser',
-      component: () => import('@/views/SearchView.vue')
+      component: () => import('@/views/SearchView.vue'),
     },
     {
       path: '/random',
       name: 'random',
-      component: () => import('@/views/RandomView.vue')
+      component: () => import('@/views/RandomView.vue'),
     },
     {
       path: '/users',
       name: 'users',
-      component: () => import('@/views/admin/UsersView.vue')
+      component: () => import('@/views/admin/UsersView.vue'),
     },
     {
       path: '/roles',
       name: 'roles',
-      component: () => import('@/views/admin/RolesView.vue')
+      component: () => import('@/views/admin/RolesView.vue'),
     },
-  ]
+    {
+      path: '/tags',
+      name: 'tags',
+      component: () => import('@/views/TagsView.vue'),
+    },
+  ],
 })
 
-export default router;
+export default router

@@ -1,7 +1,6 @@
 <template>
   <!-- 预览 -->
-  <div class="box" v-if="file">
-    <div class="corner" @click="clear">&nbsp;+</div>
+  <corner-icon v-if="file" @close="clear">
     <video
       v-if="chooseType === 'VIDEO'"
       style="max-width: 300px; max-height: 300px"
@@ -14,9 +13,9 @@
       style="max-width: 300px; max-height: 300px"
       :src="fileUrl"
       alt="IMAGE"
-      @loadedmetadata="handleImageMetadata"
+      @load="handleImageMetadata"
     />
-  </div>
+  </corner-icon>
   <!-- 上传文件 -->
   <el-upload
     v-else
@@ -40,6 +39,7 @@ import type { UploadFile, UploadInstance, UploadProps, UploadRawFile } from 'ele
 import { genFileId } from 'element-plus'
 import { requireAuth } from '@/api/auth'
 import type { HasLength, HasSize } from '@/api/type'
+import CornerIcon from '@/components/CornerIcon.vue'
 
 interface PropsType {
   chooseType: 'IMAGE' | 'VIDEO' | 'AUDIO'
@@ -90,8 +90,8 @@ const handleImageMetadata = (event: Event) => {
   const target = event.target as HTMLImageElement
   if (target) {
     metaInfo.value = {
-      width: target.width,
-      height: target.height
+      width: target.naturalWidth,
+      height: target.naturalHeight
     }
   }
 
@@ -122,26 +122,4 @@ defineExpose({
 </script>
 
 <style scoped>
-.box {
-  position: relative;
-}
-
-.corner {
-  color: #ccc;
-  user-select: none;
-  line-height: 0;
-  font-size: 30px;
-  position: absolute;
-  top: -30px;
-  right: -30px;
-  width: 0;
-  height: 0;
-  border: 30px solid transparent;
-  border-right-color: #000c;
-  transform: rotateZ(135deg);
-}
-
-.corner:hover {
-  color: #fff;
-}
 </style>

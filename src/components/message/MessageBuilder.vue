@@ -1,22 +1,31 @@
 <template>
+  <!-- 预览 -->
   <div v-if="data.length !== 0">
-    <el-text size="large">内容</el-text>
-    <!-- 内容 -->
+    <el-text size="large">预览</el-text>
     <el-row v-for="(message, index) in data" :key="index">
-      <img
+      <corner-icon
         v-if="message.type === 'IMAGE'"
-        :src="(message as UnUploadImageMessage)?.url ?? ''"
-        alt="image"
-        style="max-width: 300px; max-height: 300px;"
-      />
-      <video
+        @close="data.splice(index, 1)"
+      >
+        <img
+          :src="(message as UnUploadImageMessage)?.url ?? ''"
+          alt="image"
+          style="max-width: 300px; max-height: 300px;"
+        />
+      </corner-icon>
+      <corner-icon
         v-if="message.type === 'VIDEO' || message.type === 'AUDIO'"
-        :src="(message as UnUploadVideoMessage)?.url ?? ''"
-      />
-      <el-text
-        v-if="message.type === 'TEXT'"
-      >{{ (message as UnUploadTextMessage).content }}
-      </el-text>
+        @close="data.splice(index, 1)"
+      >
+        <video
+          v-if="message.type === 'VIDEO' || message.type === 'AUDIO'"
+          :src="(message as UnUploadVideoMessage)?.url ?? ''"
+        />
+      </corner-icon>
+      <template v-if="message.type === 'TEXT'">
+        <el-text>{{ (message as UnUploadTextMessage).content }}</el-text>
+        <el-button size="small" icon="Close" circle @click="data.splice(index, 1)" style="margin-left: 5px;" />
+      </template>
     </el-row>
   </div>
   <!-- 新增 -->
@@ -70,8 +79,8 @@
           placeholder="选择Tag"
           style="width: 120px"
           :options="allTags"
+          @change="addTag"
         />
-        <el-button v-if="inputValue != null" @click="addTag">+</el-button>
       </div>
     </el-row>
     <el-row>
@@ -97,6 +106,7 @@ import type { UnUploadImageMessage, UnUploadMessage, UnUploadTextMessage, UnUplo
 import { type BaseResp, client, uploadFile } from '@/api/api'
 import { useTagsStore } from '@/store/tags'
 import { storeToRefs } from 'pinia'
+import CornerIcon from '@/components/CornerIcon.vue'
 
 const data = ref<UnUploadMessage[]>([])
 const showAddBtn = ref<true>()

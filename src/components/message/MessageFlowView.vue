@@ -58,7 +58,7 @@ const detail = ref()
 
 function showDetail(message: MessageData) {
   if (detail.value) detail.value.resetTransform()
-  detailIndex.value = message.index
+  detailIndex.value = message.index!
   visible.value = true
 }
 
@@ -96,14 +96,16 @@ type Column = {
 const columnWidth = 600
 const columns = ref<Column[]>([])
 
-function initColumns() {
+function initColumns(): boolean {
   const width = document.body.clientWidth > 800 ? document.body.clientWidth * .8 : document.body.clientWidth
   let columnCount = Math.floor(width / columnWidth)
+  if (columns.value && columns.value.length === columnCount) return false
   if (columnCount === 0) columnCount = 1
   columns.value = []
   for (let i = 0; i < columnCount; i++) {
     columns.value.push({ messages: [], height: 0 })
   }
+  return true
 }
 
 function fillColumns(messages: MessageData[]) {
@@ -135,19 +137,21 @@ function receive(data: MessageData[]) {
 
 function clear() {
   messages.value = []
-  initColumns()
+  columns.value.forEach(e => {
+    e.messages.splice(0)
+    e.height = 0
+  })
 }
 
 defineExpose({ receive, clear })
 
 onMounted(() => {
   window.onresize = () => {
-    initColumns()
-    fillColumns(messages.value)
+    if (initColumns()) fillColumns(messages.value)
   }
 })
 
-onUnmounted(() => window.onresize = undefined)
+onUnmounted(() => window.onresize = null)
 
 </script>
 

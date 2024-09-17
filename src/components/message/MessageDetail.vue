@@ -16,7 +16,7 @@
         ref="image"
         class="detail"
         v-if="message.type === 'IMAGE'"
-        :src="`/api/file/${(message.content[0] as ImageMessage).id}`"
+        :src="`/api/file/${(message.content[0] as ImageMessage).id}.${(message.content[0] as ImageMessage).format}`"
         :alt="(message.content[0] as ImageMessage).id"
         draggable="false"
       />
@@ -85,7 +85,7 @@ const isDown = ref(false)
 const isMove = ref(false)
 
 // 修改样式，减少回流重绘
-const setStyle = (el?: HTMLElement, arr: string[]) => {
+const setStyle = (el: HTMLElement | null | undefined, arr: string[]) => {
   if (el) el.style.cssText = el.style.cssText + arr.join(';') + ';'
 }
 

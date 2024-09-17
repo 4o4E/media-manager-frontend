@@ -1,6 +1,6 @@
 <template>
   <img
-    :src="`/api/file/${(props.message.content[0] as ImageMessage).id}`"
+    :src="`/api/file/${(props.message.content[0] as ImageMessage).id}.${(message.content[0] as ImageMessage).format}`"
     :alt="props.message.id"
     style="display: flex; max-width: 100%; margin: 0 auto"
     @click="visible = !visible"

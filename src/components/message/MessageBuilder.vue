@@ -71,14 +71,14 @@
           :disable-transitions="false"
           size="large"
           @close="handleClose(tag)"
-        >{{ tagStoreRef[tag].name }}
+        >{{ tagInfo.tagsMap[tag].name }}
         </el-tag>
         <el-select-v2
           v-model="inputValue"
           filterable
           placeholder="选择Tag"
           style="width: 120px"
-          :options="allTags"
+          :options="tagInfo.options"
           @change="addTag"
         />
       </div>
@@ -99,13 +99,18 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { ref } from 'vue'
 import ChooseFile from '@/components/message/choose/ChooseFile.vue'
 import { ElInput, ElMessage, ElSelectV2 } from 'element-plus'
-import type { UnUploadImageMessage, UnUploadMessage, UnUploadTextMessage, UnUploadVideoMessage } from '@/api/upload'
+import type {
+  UnUploadImageMessage,
+  UnUploadMediaMessage,
+  UnUploadMessage,
+  UnUploadTextMessage,
+  UnUploadVideoMessage
+} from '@/api/upload'
 import { type BaseResp, client, uploadFile } from '@/api/api'
 import { useTagsStore } from '@/store/tags'
-import { storeToRefs } from 'pinia'
 import CornerIcon from '@/components/CornerIcon.vue'
 
 const data = ref<UnUploadMessage[]>([])
@@ -114,24 +119,14 @@ const temp = ref<UnUploadMessage>({ type: 'IMAGE' })
 const inputValue = ref<number>()
 const tags = ref(new Set<number>())
 const choose = ref()
-const tagStore = useTagsStore()
-const { tags: tagStoreRef } = storeToRefs(tagStore)
+const { tagInfo } = useTagsStore()
 
-const allTags = computed(() => {
-  const all = []
-  for (let key in tagStoreRef.value) {
-    const e = tagStoreRef.value[key]
-    all.push(...e.alias.map(a => ({ label: a, value: e.id })))
-  }
-  return all
-})
-
-function handleClose(tag: string) {
+function handleClose(tag: number) {
   tags.value.delete(tag)
 }
 
 function addTag() {
-  tags.value.add(inputValue.value)
+  tags.value.add(inputValue.value!)
   inputValue.value = undefined
 }
 
@@ -139,7 +134,7 @@ function changeType(t: 'IMAGE' | 'VIDEO' | 'AUDIO' | 'TEXT') {
   choose.value?.clear()
   switch (t) {
     case 'TEXT': {
-      temp.value = { content: '', type: 'TEXT' }
+      temp.value = { content: '', type: 'TEXT' } as UnUploadTextMessage
       return
     }
     case 'IMAGE':
@@ -150,10 +145,10 @@ function addToData() {
   data.value.push({
     ...temp.value!, ...choose.value?.metaInfo ?? {},
     url: choose.value?.fileUrl,
-    file: choose.value?.file,
+    file: choose.value?.file
   })
   temp.value = { type: temp.value.type }
-  if (temp.value.type === 'TEXT') temp.value.content = ''
+  if (temp.value.type === 'TEXT') (temp.value as UnUploadTextMessage).content = ''
   choose.value?.clear()
 }
 
@@ -163,7 +158,8 @@ async function uploadCompositeMessage() {
     if (e.type === 'TEXT') {
       return { type: 'text', content: (e as UnUploadTextMessage).content }
     }
-    const rawFile = e.file!
+    const media = e as UnUploadMediaMessage
+    const rawFile = media.file!
     const blob = new Blob([await rawFile.raw!.arrayBuffer()])
     const id = await uploadFile(blob)
     return {
@@ -171,31 +167,32 @@ async function uploadCompositeMessage() {
       type: 'image',
       format: rawFile.name.substring(rawFile.name.lastIndexOf('.') + 1),
       file: false,
-      width: e.width,
-      height: e.height,
-      length: e.length,
+      width: media.width,
+      height: media.height,
+      length: media.length
     }
   }))
 
   const resp = await client.put<BaseResp>('/api/message', {
     chain: messages,
-    tags: Array.from(tags.value),
+    tags: Array.from(tags.value)
   }).then(e => e.data)
   if (!resp.success) {
     ElMessage({
       type: 'warning',
-      message: resp.message,
+      message: resp.message
     })
     return
   }
   ElMessage({
     type: 'success',
-    message: '上传成功',
+    message: '上传成功'
   })
 
   // 清理objectUrl
   data.value.forEach(e => {
-    if (e.url) URL.revokeObjectURL(e.url)
+    const url = (e as UnUploadMediaMessage).url
+    if (url) URL.revokeObjectURL(url)
   })
   data.value = []
 }
@@ -205,7 +202,7 @@ function show() {
 }
 
 defineExpose({
-  data,
+  data
 })
 </script>
 

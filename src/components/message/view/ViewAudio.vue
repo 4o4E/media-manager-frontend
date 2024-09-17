@@ -1,7 +1,7 @@
 <template>
   <div>
     <video
-      :src="`/api/file/${(props.message.content[0] as ImageMessage)!.id}`"
+      :src="`/api/file/${(props.message.content[0] as ImageMessage)!.id}.${(message.content[0] as ImageMessage).format}`"
       style="display: flex"
       @click="clickVideo"
     />
@@ -11,7 +11,7 @@
       fullscreen
     >
       <video
-        :src="`/api/file/${(props.message.content[0] as ImageMessage)!.id}`"
+        :src="`/api/file/${(props.message.content[0] as ImageMessage)!.id}.${(message.content[0] as ImageMessage).format}`"
         style="height: 95vh; width: 95vh; margin: auto; display: flex;"
         controls
       />

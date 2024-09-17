@@ -1,6 +1,6 @@
 <template>
-  <div style="text-align: center; margin: 0 auto">
-    <div class="flex gap-2">
+  <div>
+    <div class="tags">
       <el-tag
         v-for="tag in tags"
         :key="tag"
@@ -8,43 +8,42 @@
         :disable-transitions="false"
         size="large"
         @close="handleClose(tag)"
-      >{{ tag }}
+      >{{ tagInfo.tagsMap[tag].name }}
       </el-tag>
-      <el-input
-        v-if="inputVisible"
-        ref="InputRef"
-        v-model="inputValue"
-        @keyup.enter="handleInputConfirm"
-        @blur="handleInputConfirm"
+    </div>
+    <div class="flex gap-2">
+      <el-select-v2
+        style="margin-bottom: 10px; width: 160px;"
+        v-model="selectedTagId"
+        :options="tagInfo.options"
+        @change="onChange"
+        filterable
+        placeholder="选择标签"
       />
-      <el-button v-else @click="showInput">+</el-button>
-      <div>
-        <el-button
-          v-if="tags.size !== 0"
-          type="success"
-          @click="search(true)"
-        >搜索
-        </el-button>
-      </div>
-      <div>
-        <el-select v-model="queryMode" style="width: 150px">
-          <el-option label="包含任意标签" :value="0" />
-          <el-option label="包含所有标签" :value="1" />
-        </el-select>
-      </div>
+      <el-button
+        v-if="tags.size !== 0"
+        type="success"
+        @click="search(true)"
+      >搜索
+      </el-button>
+      <el-select v-model="queryMode" style="width: 150px">
+        <el-option label="包含任意标签" :value="0" />
+        <el-option label="包含所有标签" :value="1" />
+      </el-select>
     </div>
   </div>
   <el-divider />
-  <MessageFlowView :load="load" ref="flow" @fetch="search" />
+  <MessageFlowView :load="load" ref="flow" @fetch="search(false)" />
 </template>
 
 <script setup lang="ts">
 import { requireAuth } from '@/api/auth'
-import { nextTick, ref } from 'vue'
+import { ref } from 'vue'
 import type { MessageData } from '@/api/type'
-import type { BaseResp, client } from '@/api/api'
-import { ElInput, ElMessage } from 'element-plus'
+import { type BaseResp, client } from '@/api/api'
+import { ElMessage, ElSelectV2 } from 'element-plus'
 import MessageFlowView from '@/components/message/MessageFlowView.vue'
+import { useTagsStore } from '@/store/tags'
 
 requireAuth()
 
@@ -53,18 +52,22 @@ const load = ref(false)
 const queryMode = ref<0 | 1>(0)
 const flow = ref()
 
-const tags = ref<Set<string>>(new Set())
-const inputValue = ref('')
-const inputVisible = ref(false)
-const InputRef = ref<InstanceType<typeof ElInput>>()
+const tags = ref<Set<number>>(new Set())
+const selectedTagId = ref<number>()
+const { tagInfo } = useTagsStore()
 
-async function search(clear: boolean = false) {
+async function search(clear: boolean) {
   load.value = true
-  const resp: BaseResp<MessageData[]> = await fetchData()
+  const resp = await client.post<BaseResp<MessageData[]>>('/api/message', {
+    queryMode: queryMode.value,
+    tags: Array.from(tags.value),
+    count: 10,
+    type: 'IMAGE'
+  }).then(e => e.data)
   if (!resp.success) {
     ElMessage({
       type: 'warning',
-      message: resp.message,
+      message: resp.message
     })
     return
   }
@@ -72,32 +75,15 @@ async function search(clear: boolean = false) {
   flow.value.receive(resp.data!)
 }
 
-async function fetchData() {
-  return await client.post<BaseResp<MessageData[]>>('/api/message', {
-    queryMode: queryMode.value,
-    tags: Array.from(tags.value),
-    count: 10,
-    type: 'IMAGE',
-  }).then(e => e.data)
-}
-
-function handleClose(tag: string) {
+function handleClose(tag: number) {
   tags.value.delete(tag)
 }
 
-function showInput() {
-  inputVisible.value = true
-  nextTick(() => {
-    InputRef.value!.input!.focus()
-  })
-}
-
-function handleInputConfirm() {
-  if (inputValue.value) {
-    tags.value.add(inputValue.value)
+function onChange() {
+  if (selectedTagId.value) {
+    tags.value.add(selectedTagId.value)
   }
-  inputVisible.value = false
-  inputValue.value = ''
+  selectedTagId.value = undefined
 }
 </script>
 
@@ -109,5 +95,12 @@ function handleInputConfirm() {
 .gap-2 {
   grid-gap: 0.5rem;
   gap: 0.5rem;
+}
+
+.tags {
+  display: flex;
+  grid-gap: 0.5rem;
+  gap: 0.5rem;
+  margin-bottom: 10px;
 }
 </style>

@@ -1,7 +1,7 @@
 <template>
   <div style="padding: 2px">
     <template v-for="tag of props.tags" :key="tag">
-      <el-tag type="primary" size="large" style="margin: .1em .3em">{{ tagStore.tags[tag]?.name ?? tag }}</el-tag>
+      <el-tag type="primary" size="large" style="margin: .1em .3em">{{ tagInfo.tagsMap[tag]?.name ?? tag }}</el-tag>
     </template>
   </div>
 </template>
@@ -10,12 +10,12 @@
 import { useTagsStore } from '@/store/tags'
 
 interface PropsType {
-  tags: string[]
+  tags: number[]
 }
 
 const props = defineProps<PropsType>()
 
-const tagStore = useTagsStore()
+const { tagInfo } = useTagsStore()
 </script>
 
 <style scoped>

@@ -1,5 +1,5 @@
 import type { HasLength, HasSize } from '@/api/type'
-import type { UploadRawFile } from 'element-plus'
+import type { UploadFile } from 'element-plus'
 
 export interface UnUploadMessage {
   type: 'TEXT' | 'AUDIO' | 'IMAGE' | 'VIDEO'
@@ -7,12 +7,17 @@ export interface UnUploadMessage {
 
 export interface UnUploadMediaMessage extends UnUploadMessage {
   type: 'AUDIO' | 'IMAGE' | 'VIDEO'
-  file?: UploadRawFile
+  file?: UploadFile
   format?: string
+  width?: number
+  height?: number
+  length?: number
+  url?: string
 }
 
 export interface UnUploadAudioMessage extends UnUploadMediaMessage, HasLength {
   type: 'AUDIO'
+  length: number
 }
 
 // export interface UnUploadBinaryMessage {
@@ -23,10 +28,15 @@ export interface UnUploadAudioMessage extends UnUploadMediaMessage, HasLength {
 
 export interface UnUploadImageMessage extends UnUploadMediaMessage, HasSize {
   type: 'IMAGE'
+  width: number
+  height: number
 }
 
 export interface UnUploadVideoMessage extends UnUploadMediaMessage, HasLength, HasSize {
   type: 'VIDEO'
+  width: number
+  height: number
+  length: number
 }
 
 export interface UnUploadTextMessage extends UnUploadMessage {

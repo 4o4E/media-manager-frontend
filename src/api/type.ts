@@ -77,6 +77,7 @@ export interface MessageData {
   time: number
   type: string
   approved: number
-  tags: string[]
+  tags: number[]
   content: Message[]
+  index?: number
 }

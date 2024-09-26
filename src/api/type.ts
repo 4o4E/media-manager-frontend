@@ -80,4 +80,5 @@ export interface MessageData {
   tags: number[]
   content: Message[]
   index?: number
+  element?: HTMLBRElement
 }

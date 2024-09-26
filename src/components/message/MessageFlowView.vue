@@ -4,7 +4,7 @@
       <div :style="`flex: 1;`">
         <template v-for="(message, j) in column.messages" :key="j">
           <el-card style="margin: 1em">
-            <div @click="showDetail(message)">
+            <div @click="showDetail(message)" :ref="el => message.element = el">
               <view-image
                 v-if="message.type == 'IMAGE'"
                 :message="message"
@@ -30,8 +30,7 @@
     </template>
     <InfiniteLoading v-if="columns.length === 0" :finished="finished" @infinite="loadData" />
     <teleport to="body" v-if="visible">
-      <message-detail ref="detail" :message="messages[detailIndex]" @next="next" @prev="prev"
-                      @close="visible = false" />
+      <message-detail ref="detail" :message="messages[detailIndex]" @next="next" @prev="prev" @close="close" />
     </teleport>
   </div>
 </template>
@@ -141,6 +140,11 @@ function clear() {
     e.messages.splice(0)
     e.height = 0
   })
+}
+
+function close() {
+  visible.value = false
+  messages.value[detailIndex.value]?.element?.scrollIntoView({ behavior: "smooth" })
 }
 
 defineExpose({ receive, clear })

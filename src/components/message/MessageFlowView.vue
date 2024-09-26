@@ -98,8 +98,8 @@ const columns = ref<Column[]>([])
 function initColumns(): boolean {
   const width = document.body.clientWidth > 800 ? document.body.clientWidth * .8 : document.body.clientWidth
   let columnCount = Math.floor(width / columnWidth)
-  if (columns.value && columns.value.length === columnCount) return false
   if (columnCount === 0) columnCount = 1
+  if (columns.value && columns.value.length === columnCount) return false
   columns.value = []
   for (let i = 0; i < columnCount; i++) {
     columns.value.push({ messages: [], height: 0 })

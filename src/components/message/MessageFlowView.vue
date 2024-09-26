@@ -22,7 +22,7 @@
                 :message="message"
               />
             </div>
-            <tags :tags="message.tags" style="margin-top: 1em" />
+            <tag-list :tags="message.tags" size="default" style="margin-top: 1em" />
           </el-card>
         </template>
         <InfiniteLoading :finished="finished" @infinite="loadData" />
@@ -37,7 +37,7 @@
 
 <script setup lang="ts">
 import type { HasSize, MessageData } from '@/api/type'
-import Tags from '@/components/message/TagsView.vue'
+import TagList from '@/components/message/TagList.vue'
 import ViewAudio from '@/components/message/view/ViewAudio.vue'
 import ViewImage from '@/components/message/view/ViewImage.vue'
 import ViewVideo from '@/components/message/view/ViewVideo.vue'

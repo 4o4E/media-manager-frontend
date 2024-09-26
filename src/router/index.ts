@@ -34,19 +34,24 @@ const router = createRouter({
       component: () => import('@/views/RandomView.vue'),
     },
     {
-      path: '/users',
+      path: '/admin/users',
       name: 'users',
       component: () => import('@/views/admin/UsersView.vue'),
     },
     {
-      path: '/roles',
+      path: '/admin/roles',
       name: 'roles',
       component: () => import('@/views/admin/RolesView.vue'),
     },
     {
-      path: '/tags',
+      path: '/admin/tags',
       name: 'tags',
-      component: () => import('@/views/tag/TagsView.vue'),
+      component: () => import('@/views/admin/TagsView.vue'),
+    },
+    {
+      path: '/admin/messages',
+      name: 'MessagesManager',
+      component: () => import('@/views/admin/MessagesView.vue'),
     },
   ],
 })

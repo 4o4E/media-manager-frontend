@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div class="tags">
+    <div class="tags" ref="tagsRef">
       <el-tag
         v-for="tag in tags"
         :key="tag"
@@ -21,11 +21,9 @@
         placeholder="选择标签"
       />
       <el-button
-        v-if="tags.size !== 0"
         type="success"
-        @click="search(true)"
-      >搜索
-      </el-button>
+        @click="refresh(true)"
+      >搜索</el-button>
       <el-select v-model="queryMode" style="width: 150px">
         <el-option label="包含任意标签" :value="0" />
         <el-option label="包含所有标签" :value="1" />
@@ -33,47 +31,34 @@
     </div>
   </div>
   <el-divider />
-  <message-flow-view :load="load" ref="flow" @fetch="search(false)" />
+  <div>
+    <template v-for="(message, index) in data" :key="index">
+      <message-preview :width="300" :message="message"/>
+      <el-divider />
+    </template>
+  </div>
+  <page-selector
+    v-model:page="page"
+    v-model:size="size"
+    v-model:total="total"
+    @refresh="refresh"
+  />
 </template>
 
 <script setup lang="ts">
-import { requireAuth } from '@/api/auth'
-import { ref } from 'vue'
+import { type BaseResp, client, type PageResp } from '@/api/api'
 import type { MessageData } from '@/api/type'
-import { type BaseResp, client } from '@/api/api'
-import { ElMessage, ElSelectV2 } from 'element-plus'
-import MessageFlowView from '@/components/message/MessageFlowView.vue'
+import { ElMessage, ElSelectV2, ElDivider } from 'element-plus'
+import { ref } from 'vue'
 import { useTagsStore } from '@/store/tags'
+import PageSelector from '@/components/PageSelector.vue'
+import MessagePreview from '@/components/message/edit/MessagePreview.vue'
 
-requireAuth()
-
-const load = ref(false)
-
+const tagsRef = ref<HTMLElement>()
 const queryMode = ref<0 | 1>(0)
-const flow = ref()
-
 const tags = ref<Set<number>>(new Set())
 const selectedTagId = ref<number>()
 const { tagInfo } = useTagsStore()
-
-async function search(clear: boolean) {
-  load.value = true
-  const resp = await client.post<BaseResp<MessageData[]>>('/api/message', {
-    queryMode: queryMode.value,
-    tags: Array.from(tags.value),
-    count: 10,
-    type: 'IMAGE'
-  }).then(e => e.data)
-  if (!resp.success) {
-    ElMessage({
-      type: 'warning',
-      message: resp.message
-    })
-    return
-  }
-  if (clear) flow.value.clear()
-  flow.value.receive(resp.data!)
-}
 
 function handleClose(tag: number) {
   tags.value.delete(tag)
@@ -85,6 +70,34 @@ function onChange() {
   }
   selectedTagId.value = undefined
 }
+
+const data = ref<MessageData[]>([])
+const page = ref(1)
+const size = ref(20)
+const total = ref(0)
+
+async function refresh() {
+  const resp = await client.post<BaseResp<PageResp<MessageData[]>>>('/api/admin/message', {
+    queryMode: queryMode.value,
+    tags: Array.from(tags.value),
+    page: page.value,
+    size: size.value,
+    type: 'IMAGE',
+  }).then(e => e.data)
+  if (!resp.success) {
+    ElMessage({
+      type: 'warning',
+      message: resp.message,
+    })
+    return
+  }
+  data.value = resp.data!.data
+  total.value = resp.data!.total
+  tagsRef.value?.scrollIntoView({ behavior: 'smooth' })
+}
+
+refresh()
+
 </script>
 
 <style scoped>

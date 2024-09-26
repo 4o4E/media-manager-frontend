@@ -34,3 +34,8 @@ export interface BaseResp<R = void> {
   message: string
   data?: R
 }
+
+export interface PageResp<T> {
+  total: number
+  data: T[]
+}

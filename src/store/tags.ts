@@ -56,7 +56,6 @@ export const useTagsStore = defineStore(tagsKey, {
         this.tagInfo.tags.forEach(tag => {
           tags[tag.id] = tag
           tags.length += 1
-          options.push({ label: tag.name, value: tag.id })
           tag.alias.forEach(e => options.push({ label: e, value: tag.id }))
         })
         this.$patch(({ tagInfo }) => {

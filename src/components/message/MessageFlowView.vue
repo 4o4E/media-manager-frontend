@@ -1,9 +1,9 @@
 <template>
   <div v-if="props.load" style="display: flex">
-    <template v-for="(column, i) in columns" :key="i">
-      <div :style="`flex: 1;`">
-        <template v-for="(message, j) in column.messages" :key="j">
-          <el-card style="margin: 1em">
+    <template v-for="column in columns" :key="column.id">
+      <div style="flex: 1;">
+        <template v-for="message in column.messages" :key="message.index">
+          <el-card style="margin: 20px">
             <div @click="showDetail(message)" :ref="el => message.element = el">
               <view-image
                 v-if="message.type == 'IMAGE'"
@@ -88,6 +88,7 @@ function loadData() {
 }
 
 type Column = {
+  id: number
   messages: MessageData[]
   height: number
 }
@@ -102,7 +103,7 @@ function initColumns(): boolean {
   if (columns.value && columns.value.length === columnCount) return false
   columns.value = []
   for (let i = 0; i < columnCount; i++) {
-    columns.value.push({ messages: [], height: 0 })
+    columns.value.push({ id: i, messages: [], height: 0 })
   }
   return true
 }
@@ -111,12 +112,13 @@ function fillColumns(messages: MessageData[]) {
   // 遍历所有元素
   for (const message of messages) {
     // 找到高度最小的列
-    const column = columns.value.reduce((acc, current) => current.height < acc.height ? current : acc)
+    const columnId = columns.value.reduce((acc, current) => current.height < acc.height ? current : acc).id
     const height = (message.type === 'IMAGE' || message.type === 'VIDEO') ? (() => {
       const e = message.content[0] as HasSize
       return columnWidth / e.width * e.height
     })() : 100
-    column.height += height
+    const column = columns.value[columnId]
+    column.height += height + 94
     column.messages.push(message)
   }
 }
@@ -144,7 +146,7 @@ function clear() {
 
 function close() {
   visible.value = false
-  messages.value[detailIndex.value]?.element?.scrollIntoView({ behavior: "smooth" })
+  messages.value[detailIndex.value]?.element?.scrollIntoView({ behavior: 'smooth' })
 }
 
 defineExpose({ receive, clear })

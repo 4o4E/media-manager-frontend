@@ -145,8 +145,6 @@ function onMouseMove(e: MouseEvent) {
 }
 
 function setScale(mouseX: number, mouseY: number, deltaScale: number) {
-  if (Math.min(imgW.value, imgH.value) * scale.value * (1 + deltaScale) < 100) return
-
   const { x: imgX, y: imgY } = move.value
 
   move.value.x += (imgX - mouseX) * deltaScale

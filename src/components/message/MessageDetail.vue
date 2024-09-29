@@ -107,7 +107,8 @@ function prev() {
 
 function onWheel(e: WheelEvent) {
   if (!e.deltaY) return
-  setScale(e.pageX, e.pageY, e.deltaY > 0 ? -0.1 : 0.1)
+  e.preventDefault()
+  setScale(e.pageX - window.scrollX, e.pageY - window.scrollY, e.deltaY > 0 ? -0.1 : 0.1)
 }
 
 function onMouseDown(e: MouseEvent) {
@@ -233,12 +234,8 @@ onUnmounted(() => window.onresize = null)
   top: 90%;
   left: 50%;
   transform: translate(-50%, 0);
-  position: absolute;
+  position: fixed;
   background-color: #111111ee;
   z-index: 100;
-}
-
-.buttons {
-
 }
 </style>

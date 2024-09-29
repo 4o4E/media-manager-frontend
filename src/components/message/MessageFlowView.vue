@@ -93,11 +93,11 @@ type Column = {
   height: number
 }
 
-const columnWidth = 600
+const columnWidth = 500
 const columns = ref<Column[]>([])
 
 function initColumns(): boolean {
-  const width = document.body.clientWidth > 800 ? document.body.clientWidth * .8 : document.body.clientWidth
+  const width = document.body.clientWidth
   let columnCount = Math.floor(width / columnWidth)
   if (columnCount === 0) columnCount = 1
   if (columns.value && columns.value.length === columnCount) return false

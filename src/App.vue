@@ -1,20 +1,19 @@
 <template>
-  <div class="limit">
-    <el-container>
-      <!-- 菜单栏 -->
-      <el-header style="position: relative; height: 60px; padding: 0;">
-        <menu-view />
-      </el-header>
-      <!-- 网页内容 -->
-      <el-container style="height: calc(98vh - 61px); margin: 0">
-        <el-main>
-          <router-view />
-        </el-main>
-      </el-container>
+  <el-container>
+    <!-- 菜单栏 -->
+    <div class="header-bg" />
+    <el-header class="header">
+      <menu-view />
+    </el-header>
+    <!-- 网页内容 -->
+    <el-container style="margin: var(--el-menu-horizontal-height) 0 0 0">
+      <el-main>
+        <router-view />
+      </el-main>
     </el-container>
-    <!-- 回到顶部 -->
-    <el-backtop :right="5" :bottom="20" />
-  </div>
+  </el-container>
+  <!-- 回到顶部 -->
+  <el-backtop :right="20" :bottom="20" />
 </template>
 
 <script setup lang="ts">
@@ -23,11 +22,17 @@ import MenuView from '@/components/MenuView.vue'
 </script>
 
 <style scoped>
-/* 最小宽度在800px内的时候引用 */
-@media (min-width: 800px) {
-  .limit {
-    margin: auto;
-    max-width: 80%;
-  }
+.header {
+  position: fixed;
+  width: 100vw;
+  height: 60px;
+  padding: 5px 20px 5px 5px;
+}
+
+.header-bg {
+  position: fixed;
+  width: 100vw;
+  height: 65px;
+  background: var(--el-bg-color);
 }
 </style>

@@ -3,10 +3,20 @@
     <template #default="{ height, width }">
       <el-button type="primary" @click="clickAdd">创建Tag</el-button>
       <el-button type="info" icon="Refresh" @click="updateTags">刷新</el-button>
+      <el-input
+        v-model="search"
+        placeholder="搜索Tag"
+        style="width: 200px; margin-left: 10px;"
+        clearable
+      >
+        <template #append>
+          <el-button icon="Search" />
+        </template>
+      </el-input>
       <el-divider />
       <el-table-v2
         :columns="columns"
-        :data="tagInfo.tags"
+        :data="tagInfo.tags.filter(e => e.name.includes(search) || e.alias.some((alias: string) => alias.includes(search)))"
         :width="width"
         :height="height - 70"
         :fixed="true"
@@ -77,7 +87,8 @@
             :disable-transitions="false"
             size="large"
             @close="removeTag(tag, index)"
-          >{{ tag }}</el-tag>
+          >{{ tag }}
+          </el-tag>
         </div>
       </el-form-item>
       <el-form-item label="添加" label-width="4em">
@@ -88,7 +99,8 @@
         <el-button
           v-if="editAliasInputValue.trim().length !== 0 && !tagAliasForm.includes(editAliasInputValue)"
           @click="addAlias"
-        >添加</el-button>
+        >添加
+        </el-button>
       </el-form-item>
     </el-form>
   </el-dialog>
@@ -104,7 +116,7 @@ import {
   ElMessage,
   ElTableV2,
   ElTag,
-  TableV2FixedDir
+  TableV2FixedDir,
 } from 'element-plus'
 import { useTagsStore } from '@/store/tags'
 import { type BaseResp, client } from '@/api/api'
@@ -119,6 +131,7 @@ interface HasAlias {
   alias: string[]
 }
 
+const search = ref('')
 const tagForm = ref<Tag>({ id: 0, name: '', description: '' })
 const tagAliasForm = ref<string[]>([])
 const { tagInfo, updateTags } = useTagsStore()
@@ -128,7 +141,7 @@ const columns: Column[] = [
     title: 'Tag',
     dataKey: 'name',
     width: 150,
-    fixed: TableV2FixedDir.LEFT
+    fixed: TableV2FixedDir.LEFT,
     // cellRenderer: ({ cellData: name }) => <ElTag>{name}</ElTag>,
   },
   {
@@ -137,14 +150,15 @@ const columns: Column[] = [
     dataKey: 'description',
     width: 150,
     align: 'left',
-    cellRenderer: ({ cellData: description }) => description ?? '无'
+    cellRenderer: ({ cellData: description }) => description ?? '无',
   },
   {
     key: 'alias',
     title: '别名',
     width: 1000,
     align: 'left',
-    cellRenderer: ({ rowData }) => rowData.alias.map((e: string) => <el-tag size="large" style="margin-right: 10px;">{e}</el-tag>)
+    cellRenderer: ({ rowData }) => rowData.alias.map((e: string) => <el-tag size="large"
+                                                                            style="margin-right: 10px;">{e}</el-tag>),
   },
   {
     title: '操作',
@@ -154,8 +168,8 @@ const columns: Column[] = [
       <el-button size="default" onclick={() => editTag(rowData)}>编辑</el-button>
       <el-button size="default" onclick={() => editTagAlias(rowData)}>编辑别名</el-button>
       <el-button size="default" type="danger">删除</el-button>
-    </>
-  }
+    </>,
+  },
 ]
 
 function clearForm() {
@@ -183,18 +197,18 @@ async function postAdd() {
   const resp = await client.post<BaseResp>('/api/tags', {
     name: tagForm.value.name,
     description: tagForm.value.description,
-    alias: tagAliasForm.value
+    alias: tagAliasForm.value,
   }).then(e => e.data)
   if (!resp.success) {
     ElMessage({
       type: 'warning',
-      message: resp.message
+      message: resp.message,
     })
     return
   }
   ElMessage({
     type: 'success',
-    message: '添加成功'
+    message: '添加成功',
   })
 
 }
@@ -210,18 +224,18 @@ function editTag(tag: Tag) {
 async function postEditTag() {
   const resp = await client.put<BaseResp>(`/api/tags/${tagForm.value.id}`, {
     name: tagForm.value.name,
-    description: tagForm.value.description
+    description: tagForm.value.description,
   }).then(e => e.data)
   if (!resp.success) {
     ElMessage({
       type: 'warning',
-      message: resp.message
+      message: resp.message,
     })
     return
   }
   ElMessage({
     type: 'success',
-    message: '修改成功'
+    message: '修改成功',
   })
   await updateTags()
   editTagFormVisible.value = false
@@ -242,13 +256,13 @@ async function addAlias() {
   if (!resp.success) {
     ElMessage({
       type: 'warning',
-      message: resp.message
+      message: resp.message,
     })
     return
   }
   ElMessage({
     type: 'success',
-    message: '添加成功'
+    message: '添加成功',
   })
   tagAliasForm.value.push(editAliasInputValue.value)
   editAliasInputValue.value = ''
@@ -261,13 +275,13 @@ async function removeTag(alias: string, index: number) {
   if (!resp.success) {
     ElMessage({
       type: 'warning',
-      message: resp.message
+      message: resp.message,
     })
     return
   }
   ElMessage({
     type: 'success',
-    message: '删除成功'
+    message: '删除成功',
   })
   tagAliasForm.value.splice(index)
   await updateTags()

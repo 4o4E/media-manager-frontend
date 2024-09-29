@@ -19,6 +19,7 @@
         :src="`/api/file/${(message.content[0] as ImageMessage).id}.${(message.content[0] as ImageMessage).format}`"
         :alt="(message.content[0] as ImageMessage).id"
         draggable="false"
+        @load="autoScale"
       />
     </div>
     <div
@@ -98,12 +99,10 @@ function updateImage() {
 
 function next() {
   emit('next')
-  nextTick(autoScale)
 }
 
 function prev() {
   emit('prev')
-  nextTick(autoScale)
 }
 
 function onWheel(e: WheelEvent) {

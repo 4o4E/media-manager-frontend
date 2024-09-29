@@ -59,7 +59,7 @@
 
 <script setup lang="ts">
 import type { ImageMessage, MessageData } from '@/api/type'
-import { nextTick, onMounted, onUnmounted, ref, toRef } from 'vue'
+import { onMounted, onUnmounted, ref, toRef } from 'vue'
 import { ArrowLeft, ArrowRight, Minus, Plus, Promotion } from '@element-plus/icons-vue'
 
 interface PropsType {

@@ -1,7 +1,7 @@
 <template>
   <div v-if="props.load" style="display: flex">
     <template v-for="column in columns" :key="column.id">
-      <div style="flex: 1;">
+      <div style="flex: 1;" :ref="el => column.element = el">
         <template v-for="message in column.messages" :key="message.index">
           <el-card style="margin: 20px">
             <div @click="showDetail(message)" :ref="el => message.element = el">
@@ -22,7 +22,7 @@
                 :message="message"
               />
             </div>
-            <tag-list :tags="message.tags" size="default" style="margin-top: 1em" />
+            <tag-list :tags="message.tags" size="default" style="margin-top: 20px" />
           </el-card>
         </template>
         <InfiniteLoading :finished="finished" @infinite="loadData" />
@@ -36,14 +36,14 @@
 </template>
 
 <script setup lang="ts">
-import type { HasSize, MessageData } from '@/api/type'
+import type { MessageData, HasSize } from '@/api/type'
 import TagList from '@/components/message/TagList.vue'
 import ViewAudio from '@/components/message/view/ViewAudio.vue'
 import ViewImage from '@/components/message/view/ViewImage.vue'
 import ViewVideo from '@/components/message/view/ViewVideo.vue'
 import ViewText from '@/components/message/view/ViewText.vue'
 import InfiniteLoading from '@/components/InfiniteLoading.vue'
-import { onMounted, onUnmounted, ref } from 'vue'
+import { nextTick, onMounted, onUnmounted, ref } from 'vue'
 import MessageDetail from '@/components/message/MessageDetail.vue'
 
 type PropsType = {
@@ -90,7 +90,7 @@ function loadData() {
 type Column = {
   id: number
   messages: MessageData[]
-  height: number
+  el?: HTMLElement
 }
 
 const columnWidth = 500
@@ -103,22 +103,30 @@ function initColumns(): boolean {
   if (columns.value && columns.value.length === columnCount) return false
   columns.value = []
   for (let i = 0; i < columnCount; i++) {
-    columns.value.push({ id: i, messages: [], height: 0 })
+    columns.value.push({ id: i, messages: [] })
   }
   return true
 }
 
 function fillColumns(messages: MessageData[]) {
+  const computedColumnWidth = (Number.parseFloat(window.getComputedStyle(document.body).width) - 40) / columns.value.length - 80 - 1.6
   // 遍历所有元素
   for (const message of messages) {
     // 找到高度最小的列
-    const columnId = columns.value.reduce((acc, current) => current.height < acc.height ? current : acc).id
-    const height = (message.type === 'IMAGE' || message.type === 'VIDEO') ? (() => {
-      const e = message.content[0] as HasSize
-      return columnWidth / e.width * e.height
-    })() : 100
+    const columnId = columns.value.reduce((acc, current) => {
+      const currHeight = current.messages
+        .map(e => e.cardHeight)
+        .reduce((acc, current) => acc + current, 0)
+      const accHeight = acc.messages
+        .map(e => e.cardHeight)
+        .reduce((acc, current) => acc + current, 0)
+      return currHeight < accHeight ? current : acc
+    }).id
     const column = columns.value[columnId]
-    column.height += height + 94
+    const { width, height } = message.content[0]
+    message.displayWidth = width < computedColumnWidth ? width : computedColumnWidth
+    message.displayHeight = width < computedColumnWidth ? height : height / width * computedColumnWidth
+    message.cardHeight = message.displayHeight + 20 + 20 + (28 + 2 * 2 + 20) + 20
     column.messages.push(message)
   }
 }
@@ -140,7 +148,6 @@ function clear() {
   messages.value = []
   columns.value.forEach(e => {
     e.messages.splice(0)
-    e.height = 0
   })
 }
 
@@ -154,6 +161,7 @@ defineExpose({ receive, clear })
 onMounted(() => {
   window.onresize = () => {
     if (initColumns()) fillColumns(messages.value)
+    console.log((Number.parseFloat(window.getComputedStyle(document.body).width) - 40) / columns.value.length)
   }
 })
 
@@ -162,5 +170,4 @@ onUnmounted(() => window.onresize = null)
 </script>
 
 <style scoped>
-
 </style>

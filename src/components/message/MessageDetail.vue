@@ -15,9 +15,9 @@
       <img
         ref="image"
         class="detail"
-        v-if="message.type === 'IMAGE'"
-        :src="`/api/file/${(message.content[0] as ImageMessage).id}.${(message.content[0] as ImageMessage).format}`"
-        :alt="(message.content[0] as ImageMessage).id"
+        v-if="message.message.type === 'IMAGE'"
+        :src="`/api/file/${(message.message.content[0] as ImageMessage).id}.${(message.message.content[0] as ImageMessage).format}`"
+        :alt="(message.message.content[0] as ImageMessage).id"
         draggable="false"
         @load="autoScale"
       />
@@ -58,17 +58,17 @@
 </template>
 
 <script setup lang="ts">
-import type { ImageMessage, MessageData } from '@/api/type'
+import type { ImageMessage, MessageViewData } from '@/api/type'
 import { onMounted, onUnmounted, ref, toRef } from 'vue'
 import { ArrowLeft, ArrowRight, Minus, Plus, Promotion } from '@element-plus/icons-vue'
 
 interface PropsType {
-  message: MessageData
+  message: MessageViewData
 }
 
 const props = defineProps<PropsType>()
-const imgW = toRef(() => (props.message.content[0] as ImageMessage).width)
-const imgH = toRef(() => (props.message.content[0] as ImageMessage).height)
+const imgW = toRef(() => (props.message.message.content[0] as ImageMessage).width)
+const imgH = toRef(() => (props.message.message.content[0] as ImageMessage).height)
 const emit = defineEmits(['next', 'prev', 'close'])
 const image = ref<HTMLElement>()
 const mask = ref<HTMLElement>()
@@ -123,7 +123,7 @@ function onMouseDown(e: MouseEvent) {
 function onMouseUp(e: MouseEvent) {
   if (e.button === 2) return
   if (!isMove.value) {
-    emit('close')
+    emit('close', props.message)
     isDown.value = false
     return
   }

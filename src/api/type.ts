@@ -79,6 +79,13 @@ export interface MessageData {
   approved: number
   tags: number[]
   content: Message[]
-  index?: number
-  element?: HTMLBRElement
+}
+
+export interface MessageViewData {
+  message: MessageData
+  index: number
+  element?: HTMLElement
+  displayWidth?: number
+  displayHeight?: number
+  cardHeight?: number
 }

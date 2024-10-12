@@ -3,27 +3,7 @@
     <template v-for="column in columns" :key="column.id">
       <div style="flex: 1;" :ref="el => column.element = el">
         <template v-for="message in column.messages" :key="message.index">
-          <el-card style="margin: 20px">
-            <div @click="showDetail(message)" :ref="el => message.element = el">
-              <view-image
-                v-if="message.type == 'IMAGE'"
-                :message="message"
-              />
-              <view-video
-                v-else-if="message.type == 'VIDEO'"
-                :message="message"
-              />
-              <view-audio
-                v-else-if="message.type == 'AUDIO'"
-                :message="message"
-              />
-              <view-text
-                v-else-if="message.type == 'TEXT'"
-                :message="message"
-              />
-            </div>
-            <tag-list :tags="message.tags" size="default" style="margin-top: 20px" />
-          </el-card>
+          <message-card-view :view-data="message" @show-detail="showDetail(message)" />
         </template>
         <InfiniteLoading :finished="finished" @infinite="loadData" />
       </div>
@@ -36,15 +16,11 @@
 </template>
 
 <script setup lang="ts">
-import type { MessageData, HasSize } from '@/api/type'
-import TagList from '@/components/message/TagList.vue'
-import ViewAudio from '@/components/message/view/ViewAudio.vue'
-import ViewImage from '@/components/message/view/ViewImage.vue'
-import ViewVideo from '@/components/message/view/ViewVideo.vue'
-import ViewText from '@/components/message/view/ViewText.vue'
+import type { MessageData, MessageViewData } from '@/api/type'
 import InfiniteLoading from '@/components/InfiniteLoading.vue'
-import { nextTick, onMounted, onUnmounted, ref } from 'vue'
+import { onMounted, onUnmounted, ref } from 'vue'
 import MessageDetail from '@/components/message/MessageDetail.vue'
+import MessageCardView from '@/components/message/MessageCardView.vue'
 
 type PropsType = {
   load: boolean
@@ -55,7 +31,7 @@ const visible = ref(false)
 const detailIndex = ref(0)
 const detail = ref()
 
-function showDetail(message: MessageData) {
+function showDetail(message: MessageViewData) {
   if (detail.value) detail.value.resetTransform()
   detailIndex.value = message.index!
   visible.value = true
@@ -89,7 +65,7 @@ function loadData() {
 
 type Column = {
   id: number
-  messages: MessageData[]
+  messages: MessageViewData[]
   el?: HTMLElement
 }
 
@@ -108,10 +84,10 @@ function initColumns(): boolean {
   return true
 }
 
-function fillColumns(messages: MessageData[]) {
-  const computedColumnWidth = (Number.parseFloat(window.getComputedStyle(document.body).width) - 40) / columns.value.length - 80 - 1.6
+function fillColumns(data: MessageData[]) {
+  const computedColumnWidth = (Number.parseFloat(window.getComputedStyle(document.body).width) - 40) / columns.value.length - 80 - 2
   // 遍历所有元素
-  for (const message of messages) {
+  for (const message of data) {
     // 找到高度最小的列
     const columnId = columns.value.reduce((acc, current) => {
       const currHeight = current.messages
@@ -124,19 +100,23 @@ function fillColumns(messages: MessageData[]) {
     }).id
     const column = columns.value[columnId]
     const { width, height } = message.content[0]
-    message.displayWidth = width < computedColumnWidth ? width : computedColumnWidth
-    message.displayHeight = width < computedColumnWidth ? height : height / width * computedColumnWidth
-    message.cardHeight = message.displayHeight + 20 + 20 + (28 + 2 * 2 + 20) + 20
-    column.messages.push(message)
+    const displayHeight = width < computedColumnWidth ? height : height / width * computedColumnWidth
+    const viewData: MessageViewData = {
+      index: messages.value.length,
+      displayWidth: width < computedColumnWidth ? width : computedColumnWidth,
+      displayHeight,
+      cardHeight: displayHeight + 20 + 20 + (28 + 2 * 2 + 20) + 20,
+      message
+    }
+    column.messages.push(viewData)
+    messages.value.push(viewData)
   }
 }
 
-const messages = ref<MessageData[]>([])
+const messages = ref<MessageViewData[]>([])
 const init = ref(false)
 
 function receive(data: MessageData[]) {
-  messages.value.push(...data)
-  messages.value.forEach((e, i) => e.index = i)
   if (!init.value) {
     initColumns()
     init.value = true
@@ -158,14 +138,26 @@ function close() {
 
 defineExpose({ receive, clear })
 
+const task = ref<number>()
+
 onMounted(() => {
   window.onresize = () => {
-    if (initColumns()) fillColumns(messages.value)
-    console.log((Number.parseFloat(window.getComputedStyle(document.body).width) - 40) / columns.value.length)
+    if (task.value) return
+    task.value = setTimeout(() => {
+      columns.value = []
+      initColumns()
+      const data = messages.value.map(e => e.message)
+      messages.value = []
+      fillColumns(data)
+      task.value = undefined
+    }, 50)
   }
 })
 
-onUnmounted(() => window.onresize = null)
+onUnmounted(() => {
+  clearTimeout(task.value)
+  window.onresize = null
+})
 
 </script>
 

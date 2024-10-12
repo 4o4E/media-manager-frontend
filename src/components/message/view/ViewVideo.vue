@@ -1,9 +1,10 @@
 <template>
-  <div>
+  <div :style="style">
     <video
       :src="`/api/file/${(props.message.content[0] as ImageMessage)!.id}.${(message.content[0] as ImageMessage).format}`"
       @click="clickVideo"
       style="display: flex"
+      @load="style = ''"
     />
     <el-dialog
       v-model="visible"
@@ -25,10 +26,12 @@ import { ref } from 'vue'
 
 interface PropsType {
   message: MessageData
+  loadHeight: number
 }
 
 const props = defineProps<PropsType>()
 const visible = ref(false)
+const style = ref(`min-height: ${props.loadHeight}px`)
 
 function clickVideo() {
   visible.value = true

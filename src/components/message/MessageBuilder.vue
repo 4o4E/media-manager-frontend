@@ -1,117 +1,137 @@
 <template>
-  <!-- 预览 -->
-  {{ data }}
-  <div v-if="data.length !== 0">
-    <el-text size="large">预览</el-text>
-<!--    <TransitionGroup name="list" tag="div" class="container">-->
-      <el-row
-        v-for="(message, index) in data"
-        :key="index"
-        draggable="true"
-        @dragstart="dragstart($event, index)"
-        @dragenter="dragenter($event, index)"
-        @dragend="dragend"
-        @dragover="dragover"
-      >
-<!--        {{ message }}-->
-        <corner-icon
-          v-if="message.type === 'IMAGE'"
-          @close="data.splice(index, 1)"
-        >
-          <img
-            :src="(message as UnUploadImageMessage)?.url ?? ''"
-            alt="image"
-            style="max-width: 300px; max-height: 300px;"
-          />
-        </corner-icon>
-        <corner-icon
-          v-if="message.type === 'VIDEO' || message.type === 'AUDIO'"
-          @close="data.splice(index, 1)"
-        >
-          <video
-            v-if="message.type === 'VIDEO' || message.type === 'AUDIO'"
-            :src="(message as UnUploadVideoMessage)?.url ?? ''"
-          />
-        </corner-icon>
-        <template v-if="message.type === 'TEXT'">
-          <el-text>{{ (message as UnUploadTextMessage).content }}</el-text>
-          <el-button size="small" icon="Close" circle @click="data.splice(index, 1)" style="margin-left: 5px;" />
-        </template>
-      </el-row>
-<!--    </TransitionGroup>-->
-  </div>
-  <!-- 新增 -->
-  <div>
-    <el-text size="large">新增</el-text>
-    <el-button v-if="showAddBtn" @click="show"></el-button>
-    <div v-else>
-      <!-- 选择类型 -->
-      <el-row>
-        <el-select v-model="temp.type" @change="changeType">
-          <el-option label="图片" value="IMAGE" />
-          <el-option label="视频" value="VIDEO" />
-          <el-option label="音频" value="AUDIO" />
-          <el-option label="文本" value="TEXT" />
-        </el-select>
-      </el-row>
-      <!-- 选择文件 -->
-      <el-row>
-        <choose-file ref="choose" v-if="temp.type !== 'TEXT'" :choose-type="temp.type" />
-        <el-input v-else v-model="(temp as UnUploadTextMessage).content" />
-      </el-row>
-      <el-row>
-        <el-button
-          v-if="temp.type === 'TEXT'
-           ? (temp as UnUploadTextMessage).content.length !== 0
-           : choose?.file != null
-          "
-          @click="addToData"
-        >添加
-        </el-button>
-      </el-row>
-    </div>
-  </div>
-  <!-- 输入tag -->
-  <div>
-    <el-text size="large">Tag</el-text>
-    <el-row>
+  <el-row :gutter="20">
+    <el-col :span="12">
+      <!-- 预览 -->
+      <el-text size="large">预览</el-text>
       <div>
-        <el-tag
-          v-for="tag in tags"
-          :key="tag"
-          closable
-          :disable-transitions="false"
-          size="large"
-          @close="handleClose(tag)"
-        >{{ tagInfo.tagsMap[tag].name }}
-        </el-tag>
-        <el-select-v2
-          v-model="inputValue"
-          filterable
-          placeholder="选择Tag"
-          style="width: 120px"
-          :options="tagInfo.options"
-          @change="addTag"
-        />
+        <div v-if="data.length === 0" v-bind:style="{
+          border: '1px #777 dashed',
+          borderRadius: '15px',
+          margin: '10px 0',
+          minHeight: '200px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }">
+          <p style="font-size: 25px;">还没有内容</p>
+        </div>
+        <vue-draggable
+          v-else
+          v-model="data"
+          :animation="150"
+          target=".message-element"
+          @start="drag = true"
+          @end="nextTick(() => drag = false)"
+        >
+          <TransitionGroup
+            type="transition"
+            tag="ul"
+            :name="!drag ? 'fade' : undefined"
+            class="message-element"
+          >
+            <li
+              v-for="(message, index) in data"
+              :key="message.index"
+            >
+              <corner-icon
+                v-if="message.type === 'IMAGE'"
+                @close="data.splice(index, 1)"
+              >
+                <img
+                  :src="(message as UnUploadImageMessage)?.url ?? ''"
+                  alt="image"
+                  style="max-width: 300px; max-height: 300px;"
+                />
+              </corner-icon>
+              <corner-icon
+                v-if="message.type === 'VIDEO' || message.type === 'AUDIO'"
+                @close="data.splice(index, 1)"
+              >
+                <video
+                  v-if="message.type === 'VIDEO' || message.type === 'AUDIO'"
+                  :src="(message as UnUploadVideoMessage)?.url ?? ''"
+                />
+              </corner-icon>
+              <template v-if="message.type === 'TEXT'">
+                <el-text>{{ (message as UnUploadTextMessage).content }}</el-text>
+                <el-button size="small" icon="Close" circle @click="data.splice(index, 1)" style="margin-left: 5px;" />
+              </template>
+            </li>
+          </TransitionGroup>
+        </vue-draggable>
       </div>
-    </el-row>
-    <el-row>
+    </el-col>
+    <el-col :span="12">
+      <!-- 新增 -->
       <div>
-        <!-- 确认上传 -->
-        <el-button
-          v-if="tags.size != 0 && data.length !== 0"
-          type="success"
-          @click="uploadCompositeMessage"
-        >上传
-        </el-button>
+        <el-text size="large">新增</el-text>
+        <div>
+          <!-- 选择类型 -->
+          <el-row>
+            <el-select v-model="temp.type" @change="changeType" style="max-width: 120px;">
+              <el-option label="图片" value="IMAGE" />
+              <el-option label="视频" value="VIDEO" />
+              <el-option label="音频" value="AUDIO" />
+              <el-option label="文本" value="TEXT" />
+            </el-select>
+            <el-button
+              v-if="showAddBtn()"
+              type="primary"
+              style="max-width: 120px; margin-left: 10px;"
+              @click="addToData"
+            >添加
+            </el-button>
+          </el-row>
+          <!-- 选择文件 -->
+          <el-row>
+            <choose-file ref="choose" v-if="temp.type !== 'TEXT'" :choose-type="temp.type" :max-width="120" />
+            <el-input v-else :rows="3" v-model="(temp as UnUploadTextMessage).content" />
+          </el-row>
+        </div>
       </div>
-    </el-row>
-  </div>
+      <!-- 输入tag -->
+      <div>
+        <el-text size="large">Tag</el-text>
+        <el-row>
+          <div>
+            <el-tag
+              v-for="tag in tags"
+              :key="tag"
+              closable
+              :disable-transitions="false"
+              size="large"
+              @close="handleClose(tag)"
+            >{{ tagInfo.tagsMap[tag].name }}
+            </el-tag>
+            <el-select-v2
+              v-model="inputValue"
+              filterable
+              placeholder="选择Tag"
+              style="width: 120px"
+              :options="tagInfo.options"
+              @change="addTag"
+            />
+          </div>
+        </el-row>
+        <el-row>
+          <div>
+            <!-- 确认上传 -->
+            <el-button
+              v-if="tags.size != 0 && data.length !== 0"
+              type="success"
+              @click="uploadCompositeMessage"
+            >上传
+            </el-button>
+          </div>
+        </el-row>
+      </div>
+    </el-col>
+  </el-row>
 
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { nextTick, ref } from 'vue'
 import ChooseFile from '@/components/message/choose/ChooseFile.vue'
 import { ElInput, ElMessage, ElSelectV2 } from 'element-plus'
 import type {
@@ -124,54 +144,17 @@ import type {
 import { type BaseResp, client, uploadFile } from '@/api/api'
 import { useTagsStore } from '@/store/tags'
 import CornerIcon from '@/components/CornerIcon.vue'
+import { VueDraggable } from 'vue-draggable-plus'
+import { now } from '@vueuse/core'
 
 const data = ref<UnUploadMessage[]>([])
-const showAddBtn = ref<true>()
 const temp = ref<UnUploadMessage>({ type: 'IMAGE' })
 const inputValue = ref<number>()
 const tags = ref(new Set<number>())
 const choose = ref()
 const { tagInfo } = useTagsStore()
 
-const dragBefore = ref<UnUploadMessage[]>([])
-const dragIndex = ref(-1)
-
-function dragstart(e: DragEvent, i: number) {
-  // dragBefore.value = data.value
-  // e.preventDefault()
-  e.stopPropagation()
-  dragIndex.value = i
-  // console.log(JSON.stringify(dragBefore.value))
-  console.log('start', i, e)
-}
-
-function dragenter(e: DragEvent, i: number) {
-  e.preventDefault()
-  // 拖拽到原位置时不触发
-  if (dragIndex.value === i) return
-
-  // 交换
-  const origin = data.value[i]
-  const source = data.value[dragIndex.value]
-  console.log('origin', i, JSON.stringify(origin))
-  console.log('source', dragIndex.value, JSON.stringify(source))
-  data.value[dragIndex.value] = origin
-  data.value[i] = source
-  // 更新节点位置
-  dragIndex.value = i
-  console.log('enter', i, e)
-}
-
-function dragover(e) {
-  e.preventDefault()
-  e.dataTransfer.dropEffect = 'move'
-}
-
-function dragend(e) {
-  e.preventDefault()
-  dragIndex.value = -1
-  console.log('end', e)
-}
+const drag = ref(false)
 
 function handleClose(tag: number) {
   tags.value.delete(tag)
@@ -193,11 +176,18 @@ function changeType(t: 'IMAGE' | 'VIDEO' | 'AUDIO' | 'TEXT') {
   }
 }
 
+function showAddBtn() {
+  return temp.value.type === 'TEXT'
+    ? (temp.value as UnUploadTextMessage).content.length !== 0
+    : choose.value?.file != null
+}
+
 function addToData() {
   data.value.push({
     ...temp.value!, ...choose.value?.metaInfo ?? {},
     url: choose.value?.fileUrl,
     file: choose.value?.file,
+    index: now(),
   })
   temp.value = { type: temp.value.type }
   if (temp.value.type === 'TEXT') (temp.value as UnUploadTextMessage).content = ''
@@ -249,10 +239,6 @@ async function uploadCompositeMessage() {
   data.value = []
 }
 
-function show() {
-  showAddBtn.value = true
-}
-
 defineExpose({
   data,
 })
@@ -276,5 +262,11 @@ defineExpose({
 .list-enter-active,
 .list-leave-active {
   transition: all 0.2s ease;
+}
+
+ul {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
 }
 </style>

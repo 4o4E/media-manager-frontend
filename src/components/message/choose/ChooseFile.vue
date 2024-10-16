@@ -24,7 +24,7 @@
     :limit="1"
     :on-exceed="handleExceed"
     :on-change="onChange"
-    style="width: 100%; margin: 0 auto;"
+    :style="`maxWidth: ${maxWidth}px`"
   >
     <el-button>
       <el-text style="width: 300px; margin: 0 auto;">选择{{ choose[chooseType].display }}</el-text>
@@ -43,6 +43,7 @@ import CornerIcon from '@/components/CornerIcon.vue'
 
 interface PropsType {
   chooseType: 'IMAGE' | 'VIDEO' | 'AUDIO'
+  maxWidth: number
 }
 
 const choose = {

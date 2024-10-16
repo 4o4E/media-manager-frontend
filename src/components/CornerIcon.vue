@@ -12,6 +12,7 @@ const emit = defineEmits(['close'])
 <style scoped>
 .box {
   position: relative;
+  display: inline-block;
 }
 
 .corner {

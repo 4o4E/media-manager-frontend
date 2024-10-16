@@ -3,11 +3,10 @@
     <el-col :span="12">
       <!-- 预览 -->
       <el-text size="large">预览</el-text>
-      <div>
+      <div style="margin: 10px 0">
         <div v-if="data.length === 0" v-bind:style="{
           border: '1px #777 dashed',
           borderRadius: '15px',
-          margin: '10px 0',
           minHeight: '200px',
           display: 'flex',
           alignItems: 'center',
@@ -52,10 +51,10 @@
                   :src="(message as UnUploadVideoMessage)?.url ?? ''"
                 />
               </corner-icon>
-              <template v-if="message.type === 'TEXT'">
+              <div v-if="message.type === 'TEXT'" style="margin-bottom: 8px;">
                 <el-text>{{ (message as UnUploadTextMessage).content }}</el-text>
                 <el-button size="small" icon="Close" circle @click="data.splice(index, 1)" style="margin-left: 5px;" />
-              </template>
+              </div>
             </li>
           </TransitionGroup>
         </vue-draggable>

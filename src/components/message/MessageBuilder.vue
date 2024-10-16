@@ -1,32 +1,44 @@
 <template>
   <!-- 预览 -->
+  {{ data }}
   <div v-if="data.length !== 0">
     <el-text size="large">预览</el-text>
-    <el-row v-for="(message, index) in data" :key="index">
-      <corner-icon
-        v-if="message.type === 'IMAGE'"
-        @close="data.splice(index, 1)"
+<!--    <TransitionGroup name="list" tag="div" class="container">-->
+      <el-row
+        v-for="(message, index) in data"
+        :key="index"
+        draggable="true"
+        @dragstart="dragstart($event, index)"
+        @dragenter="dragenter($event, index)"
+        @dragend="dragend"
+        @dragover="dragover"
       >
-        <img
-          :src="(message as UnUploadImageMessage)?.url ?? ''"
-          alt="image"
-          style="max-width: 300px; max-height: 300px;"
-        />
-      </corner-icon>
-      <corner-icon
-        v-if="message.type === 'VIDEO' || message.type === 'AUDIO'"
-        @close="data.splice(index, 1)"
-      >
-        <video
+<!--        {{ message }}-->
+        <corner-icon
+          v-if="message.type === 'IMAGE'"
+          @close="data.splice(index, 1)"
+        >
+          <img
+            :src="(message as UnUploadImageMessage)?.url ?? ''"
+            alt="image"
+            style="max-width: 300px; max-height: 300px;"
+          />
+        </corner-icon>
+        <corner-icon
           v-if="message.type === 'VIDEO' || message.type === 'AUDIO'"
-          :src="(message as UnUploadVideoMessage)?.url ?? ''"
-        />
-      </corner-icon>
-      <template v-if="message.type === 'TEXT'">
-        <el-text>{{ (message as UnUploadTextMessage).content }}</el-text>
-        <el-button size="small" icon="Close" circle @click="data.splice(index, 1)" style="margin-left: 5px;" />
-      </template>
-    </el-row>
+          @close="data.splice(index, 1)"
+        >
+          <video
+            v-if="message.type === 'VIDEO' || message.type === 'AUDIO'"
+            :src="(message as UnUploadVideoMessage)?.url ?? ''"
+          />
+        </corner-icon>
+        <template v-if="message.type === 'TEXT'">
+          <el-text>{{ (message as UnUploadTextMessage).content }}</el-text>
+          <el-button size="small" icon="Close" circle @click="data.splice(index, 1)" style="margin-left: 5px;" />
+        </template>
+      </el-row>
+<!--    </TransitionGroup>-->
   </div>
   <!-- 新增 -->
   <div>
@@ -107,7 +119,7 @@ import type {
   UnUploadMediaMessage,
   UnUploadMessage,
   UnUploadTextMessage,
-  UnUploadVideoMessage
+  UnUploadVideoMessage,
 } from '@/api/upload'
 import { type BaseResp, client, uploadFile } from '@/api/api'
 import { useTagsStore } from '@/store/tags'
@@ -120,6 +132,46 @@ const inputValue = ref<number>()
 const tags = ref(new Set<number>())
 const choose = ref()
 const { tagInfo } = useTagsStore()
+
+const dragBefore = ref<UnUploadMessage[]>([])
+const dragIndex = ref(-1)
+
+function dragstart(e: DragEvent, i: number) {
+  // dragBefore.value = data.value
+  // e.preventDefault()
+  e.stopPropagation()
+  dragIndex.value = i
+  // console.log(JSON.stringify(dragBefore.value))
+  console.log('start', i, e)
+}
+
+function dragenter(e: DragEvent, i: number) {
+  e.preventDefault()
+  // 拖拽到原位置时不触发
+  if (dragIndex.value === i) return
+
+  // 交换
+  const origin = data.value[i]
+  const source = data.value[dragIndex.value]
+  console.log('origin', i, JSON.stringify(origin))
+  console.log('source', dragIndex.value, JSON.stringify(source))
+  data.value[dragIndex.value] = origin
+  data.value[i] = source
+  // 更新节点位置
+  dragIndex.value = i
+  console.log('enter', i, e)
+}
+
+function dragover(e) {
+  e.preventDefault()
+  e.dataTransfer.dropEffect = 'move'
+}
+
+function dragend(e) {
+  e.preventDefault()
+  dragIndex.value = -1
+  console.log('end', e)
+}
 
 function handleClose(tag: number) {
   tags.value.delete(tag)
@@ -134,7 +186,7 @@ function changeType(t: 'IMAGE' | 'VIDEO' | 'AUDIO' | 'TEXT') {
   choose.value?.clear()
   switch (t) {
     case 'TEXT': {
-      temp.value = { content: '', type: 'TEXT' } as UnUploadTextMessage
+      temp.value = { type: 'TEXT', content: '' } as UnUploadTextMessage
       return
     }
     case 'IMAGE':
@@ -145,7 +197,7 @@ function addToData() {
   data.value.push({
     ...temp.value!, ...choose.value?.metaInfo ?? {},
     url: choose.value?.fileUrl,
-    file: choose.value?.file
+    file: choose.value?.file,
   })
   temp.value = { type: temp.value.type }
   if (temp.value.type === 'TEXT') (temp.value as UnUploadTextMessage).content = ''
@@ -169,24 +221,24 @@ async function uploadCompositeMessage() {
       file: false,
       width: media.width,
       height: media.height,
-      length: media.length
+      length: media.length,
     }
   }))
 
   const resp = await client.put<BaseResp>('/api/message', {
     chain: messages,
-    tags: Array.from(tags.value)
+    tags: Array.from(tags.value),
   }).then(e => e.data)
   if (!resp.success) {
     ElMessage({
       type: 'warning',
-      message: resp.message
+      message: resp.message,
     })
     return
   }
   ElMessage({
     type: 'success',
-    message: '上传成功'
+    message: '上传成功',
   })
 
   // 清理objectUrl
@@ -202,7 +254,7 @@ function show() {
 }
 
 defineExpose({
-  data
+  data,
 })
 </script>
 
@@ -218,5 +270,11 @@ defineExpose({
 
 .el-tag:last-child {
   margin-right: 0;
+}
+
+.list-move, /* 对移动中的元素应用的过渡 */
+.list-enter-active,
+.list-leave-active {
+  transition: all 0.2s ease;
 }
 </style>

@@ -51,8 +51,8 @@
                   :src="(message as UnUploadVideoMessage)?.url ?? ''"
                 />
               </corner-icon>
-              <div v-if="message.type === 'TEXT'" style="margin-bottom: 8px;">
-                <el-text>{{ (message as UnUploadTextMessage).content }}</el-text>
+              <div v-if="message.type === 'TEXT'" style="margin-bottom: 8px; display: flex;">
+                <el-input type="textarea" disabled :rows="[...(message as UnUploadTextMessage).content.match(/\n/g)].length + 1" v-model="(message as UnUploadTextMessage).content" />
                 <el-button size="small" icon="Close" circle @click="data.splice(index, 1)" style="margin-left: 5px;" />
               </div>
             </li>
@@ -81,10 +81,11 @@
             >添加
             </el-button>
           </el-row>
-          <!-- 选择文件 -->
           <el-row>
+            <!-- 选择文件 -->
             <choose-file ref="choose" v-if="temp.type !== 'TEXT'" :choose-type="temp.type" :max-width="120" />
-            <el-input v-else :rows="3" v-model="(temp as UnUploadTextMessage).content" />
+            <!-- 输入文本 -->
+            <el-input v-else type="textarea" :rows="3" v-model="(temp as UnUploadTextMessage).content" />
           </el-row>
         </div>
       </div>
@@ -166,13 +167,7 @@ function addTag() {
 
 function changeType(t: 'IMAGE' | 'VIDEO' | 'AUDIO' | 'TEXT') {
   choose.value?.clear()
-  switch (t) {
-    case 'TEXT': {
-      temp.value = { type: 'TEXT', content: '' } as UnUploadTextMessage
-      return
-    }
-    case 'IMAGE':
-  }
+  if (t === 'TEXT') temp.value = { type: 'TEXT', content: '' }
 }
 
 function showAddBtn() {

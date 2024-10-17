@@ -52,7 +52,7 @@
                 />
               </corner-icon>
               <div v-if="message.type === 'TEXT'" style="margin-bottom: 8px; display: flex;">
-                <el-input type="textarea" disabled :rows="[...(message as UnUploadTextMessage).content.match(/\n/g) ?? []].length + 1" v-model="(message as UnUploadTextMessage).content" />
+                <el-input type="textarea" disabled :autosize="{ minRows: 1, maxRows: 10 }" v-model="(message as UnUploadTextMessage).content" />
                 <el-button size="small" icon="Close" circle @click="data.splice(index, 1)" style="margin-left: 5px;" />
               </div>
             </li>
@@ -85,7 +85,7 @@
             <!-- 选择文件 -->
             <choose-file ref="choose" v-if="temp.type !== 'TEXT'" :choose-type="temp.type" :max-width="120" />
             <!-- 输入文本 -->
-            <el-input v-else type="textarea" :rows="3" v-model="(temp as UnUploadTextMessage).content" />
+            <el-input v-else type="textarea" :autosize="{ minRows: 3 }" v-model="(temp as UnUploadTextMessage).content" />
           </el-row>
         </div>
       </div>

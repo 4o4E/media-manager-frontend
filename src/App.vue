@@ -27,6 +27,7 @@ import MenuView from '@/components/MenuView.vue'
   width: 100vw;
   height: 60px;
   padding: 5px 20px 5px 5px;
+  z-index: 10;
 }
 
 .header-bg {
@@ -34,5 +35,6 @@ import MenuView from '@/components/MenuView.vue'
   width: 100vw;
   height: 65px;
   background: var(--el-bg-color);
+  z-index: 10;
 }
 </style>

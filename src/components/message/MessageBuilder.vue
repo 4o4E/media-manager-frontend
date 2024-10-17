@@ -252,12 +252,6 @@ defineExpose({
   margin-right: 0;
 }
 
-.list-move, /* 对移动中的元素应用的过渡 */
-.list-enter-active,
-.list-leave-active {
-  transition: all 0.2s ease;
-}
-
 ul {
   list-style-type: none;
   padding: 0;

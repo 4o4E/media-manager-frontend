@@ -30,11 +30,11 @@
         :icon="EditPen"
         circle
         style="margin-left: auto; margin-right: 5px"
-        @click="showEdit(message)"
+        @click="showEdit"
       />
       <el-dialog draggable title="编辑" v-model="isShowEdit" width="80%">
         <div style="height: 60vh">
-          <message-builder ref="builder" :on-upload="handleUpload" btn="更新" />
+          <message-builder :data="editing" :tags="tags" :on-upload="handleUpload" btn="更新" />
         </div>
       </el-dialog>
     </div>
@@ -47,12 +47,13 @@ import ViewText from '@/components/message/view/ViewText.vue'
 import ViewVideo from '@/components/message/view/ViewVideo.vue'
 import ViewAudio from '@/components/message/view/ViewAudio.vue'
 import TagList from '@/components/message/TagList.vue'
-import type { MessageData, MessageViewData } from '@/api/type'
+import type { MessageViewData } from '@/api/type'
 import { onMounted, ref } from 'vue'
 import { EditPen } from '@element-plus/icons-vue'
 import { auth } from '@/api/auth'
 import MessageBuilder from '@/components/message/MessageBuilder.vue'
 import { toUnUpload } from '@/api/convert'
+import type { UnUploadMessage } from '@/api/upload'
 import { type BaseResp, client } from '@/api/api'
 
 type PropsType = {
@@ -71,14 +72,16 @@ function showDetail(viewData: MessageViewData) {
 }
 
 const isShowEdit = ref(false)
-const builder = ref()
+const editing = ref<UnUploadMessage[]>([])
+const tags = ref<number[]>([])
 
 async function handleUpload(data: { chain, tags: number[] }): BaseResp {
   await client.put<BaseResp>('/api/message', data).then(e => e.data)
 }
 
-async function showEdit(message: MessageData) {
-  builder.value.setData(await toUnUpload(message.content), message.tags)
+async function showEdit() {
+  editing.value = await toUnUpload(message)
+  tags.value = message.tags
   isShowEdit.value = true
 }
 

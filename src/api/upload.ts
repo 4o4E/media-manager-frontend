@@ -1,13 +1,13 @@
 import type { HasLength, HasSize } from '@/api/type'
-import type { UploadFile } from 'element-plus'
 
 export interface UnUploadMessage {
   type: 'TEXT' | 'AUDIO' | 'IMAGE' | 'VIDEO'
+  index: number
 }
 
 export interface UnUploadMediaMessage extends UnUploadMessage {
   type: 'AUDIO' | 'IMAGE' | 'VIDEO'
-  file?: UploadFile
+  blob?: Blob
   format?: string
   width?: number
   height?: number

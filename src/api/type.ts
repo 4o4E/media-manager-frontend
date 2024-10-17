@@ -61,7 +61,9 @@ export interface TextMessage {
   content: string
 }
 
-export type Message = AudioMessage | BinaryMessage | ImageMessage | VideoMessage | TextMessage
+export type Message = {
+  type: 'audio' | 'binary' | 'image' | 'video' | 'text'
+} & (AudioMessage | BinaryMessage | ImageMessage | VideoMessage | TextMessage)
 
 export interface MessageComment {
   index: number

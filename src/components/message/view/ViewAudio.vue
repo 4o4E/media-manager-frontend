@@ -6,6 +6,7 @@
       @click="clickVideo"
     />
     <el-dialog
+      draggable
       v-model="visible"
       center
       fullscreen

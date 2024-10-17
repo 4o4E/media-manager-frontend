@@ -25,7 +25,7 @@
   </el-auto-resizer>
 
   <!-- 新增Tag -->
-  <el-dialog v-model="addTagFormVisible" title="创建Tag" width="500">
+  <el-dialog draggable v-model="addTagFormVisible" title="创建Tag" width="500">
     <el-form :model="tagForm">
       <el-form-item required label="名字" label-width="6em">
         <el-input v-model="tagForm.name" />
@@ -58,7 +58,7 @@
     </template>
   </el-dialog>
   <!-- 修改Tag -->
-  <el-dialog v-model="editTagFormVisible" title="修改Tag" width="500">
+  <el-dialog draggable v-model="editTagFormVisible" title="修改Tag" width="500">
     <el-form>
       <el-form-item required label="名字" label-width="6em">
         <el-input v-model="tagForm.name" />
@@ -75,7 +75,7 @@
     </template>
   </el-dialog>
   <!-- 修改alias -->
-  <el-dialog v-model="editTagAliasFormVisible" title="修改Tag" width="500">
+  <el-dialog draggable v-model="editTagAliasFormVisible" title="修改Tag" width="500">
     <el-form>
       <el-form-item required label="别名" label-width="4em">
         <div class="tagContainer">

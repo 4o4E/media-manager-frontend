@@ -58,7 +58,7 @@ const { tagInfo } = useTagsStore()
 
 async function search(clear: boolean) {
   load.value = true
-  const resp = await client.post<BaseResp<MessageData[]>>('/api/message', {
+  const resp = await client.post<BaseResp<MessageData[]>>('/api/message/query', {
     queryMode: queryMode.value,
     tags: Array.from(tags.value),
     count: 10,

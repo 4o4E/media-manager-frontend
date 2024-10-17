@@ -33,10 +33,15 @@
   <el-divider />
   <div>
     <template v-for="(message, index) in data" :key="index">
-      <message-preview :width="300" :message="message"/>
+      <message-preview :width="300" :message="message" @edit="showEdit(message)"/>
       <el-divider />
     </template>
   </div>
+  <el-dialog draggable title="编辑" v-model="isShowEdit" destroy-on-close width="80%">
+    <div style="height: 60vh">
+      <message-builder :data="editing" :tags="editTags" :on-upload="handleUpload" btn="更新" />
+    </div>
+  </el-dialog>
   <page-selector
     v-model:page="page"
     v-model:size="size"
@@ -53,12 +58,29 @@ import { ref } from 'vue'
 import { useTagsStore } from '@/store/tags'
 import PageSelector from '@/components/PageSelector.vue'
 import MessagePreview from '@/components/message/edit/MessagePreview.vue'
+import MessageBuilder from '@/components/message/MessageBuilder.vue'
+import type { UnUploadMessage } from '@/api/upload'
+import { toUnUpload } from '@/api/convert'
 
 const tagsRef = ref<HTMLElement>()
 const queryMode = ref<0 | 1>(0)
 const tags = ref<Set<number>>(new Set())
 const selectedTagId = ref<number>()
 const { tagInfo } = useTagsStore()
+
+const isShowEdit = ref(false)
+const editing = ref<UnUploadMessage[]>([])
+const editTags = ref<number[]>([])
+
+async function handleUpload(data: {chain, tags: number[]}): BaseResp {
+  await client.put<BaseResp>('/api/message', data).then(e => e.data)
+}
+
+async function showEdit(message: MessageData) {
+  editing.value = await toUnUpload(message)
+  editTags.value = message.tags
+  isShowEdit.value = true
+}
 
 function handleClose(tag: number) {
   tags.value.delete(tag)

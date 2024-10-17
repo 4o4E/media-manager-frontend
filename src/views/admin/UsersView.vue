@@ -16,7 +16,7 @@
   </el-table>
 
   <!-- 新增用户 -->
-  <el-dialog v-model="addUserFormVisible" title="新增用户" width="300">
+  <el-dialog draggable v-model="addUserFormVisible" title="新增用户" width="300">
     <el-form :model="addUserForm">
       <el-form-item required label="用户名" label-width="6em">
         <el-input v-model="addUserForm!.name" />
@@ -37,7 +37,7 @@
   </el-dialog>
 
   <!-- 编辑信息 -->
-  <el-dialog v-model="updateUserFormVisible" title="编辑信息" width="300">
+  <el-dialog draggable v-model="updateUserFormVisible" title="编辑信息" width="300">
     <el-form :model="updateUserForm">
       <el-form-item required label="用户名">
         <el-input v-model="updateUserForm!.name" />
@@ -55,7 +55,7 @@
   </el-dialog>
 
   <!-- 编辑密码 -->
-  <el-dialog v-model="updatePasswordFormVisible" title="编辑信息" width="300">
+  <el-dialog draggable v-model="updatePasswordFormVisible" title="编辑信息" width="300">
     <el-form :model="updatePasswordForm">
       <el-form-item label="新密码" required>
         <el-input placeholder="请输入新密码" v-model="updatePasswordForm!.password" />
@@ -70,7 +70,7 @@
   </el-dialog>
 
   <!-- 分配角色 -->
-  <el-dialog v-model="allocateRoleFormVisible" title="分配角色" width="50%">
+  <el-dialog draggable v-model="allocateRoleFormVisible" title="分配角色" width="50%">
     <el-table ref="multipleTableRef" :data="allRoleList" style="width: 100%" @select="allocateSelect">
       <el-table-column type="selection" width="55" />
       <el-table-column prop="name" label="角色名" width="180" />

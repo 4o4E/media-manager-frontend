@@ -32,8 +32,14 @@
           上传于: {{ moment(props.message.time).format('YYYY-MM-DD HH:mm:ss') }}
         </el-text>
       </div>
-      <div>
+      <div style="display: flex;">
         <tag-list :tags="message.tags" size="default" />
+        <el-button
+          v-if="auth.perms.includes('message:edit')"
+          :icon="EditPen"
+          circle
+          @click="emit('edit')"
+        />
       </div>
     </div>
   </div>
@@ -43,6 +49,8 @@
 import moment from 'moment'
 import { type ImageMessage, type MessageData, type TextMessage } from '@/api/type'
 import TagList from '@/components/message/TagList.vue'
+import { auth } from '@/api/auth'
+import { EditPen } from '@element-plus/icons-vue'
 
 interface PropsType {
   message: MessageData
@@ -50,6 +58,8 @@ interface PropsType {
 }
 
 const props = defineProps<PropsType>()
+
+const emit = defineEmits(['edit'])
 </script>
 
 <style scoped>

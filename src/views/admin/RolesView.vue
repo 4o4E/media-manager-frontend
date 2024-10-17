@@ -16,7 +16,7 @@
   </el-table>
 
   <!-- 新增角色 -->
-  <el-dialog v-model="addRoleFormVisible" title="新增角色" width="300">
+  <el-dialog draggable v-model="addRoleFormVisible" title="新增角色" width="300">
     <el-form :model="addRoleForm">
       <el-form-item required label="角色名" label-width="6em">
         <el-input v-model="addRoleForm!.name" />
@@ -34,7 +34,7 @@
   </el-dialog>
 
   <!-- 编辑信息 -->
-  <el-dialog v-model="updateRoleFormVisible" title="编辑信息" width="300">
+  <el-dialog draggable v-model="updateRoleFormVisible" title="编辑信息" width="300">
     <el-form :model="updateRoleForm">
       <el-form-item required label="角色名">
         <el-input v-model="updateRoleForm!.name" />
@@ -52,7 +52,7 @@
   </el-dialog>
 
   <!-- 分配权限 -->
-  <el-dialog v-model="allocateRoleFormVisible" title="分配权限" width="70%" top="5vh">
+  <el-dialog draggable v-model="allocateRoleFormVisible" title="分配权限" width="70%" top="5vh">
     <el-table
       ref="multipleTableRef"
       :data="allPermList"

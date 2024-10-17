@@ -22,7 +22,7 @@
           @start="drag = true"
           @end="nextTick(() => drag = false)"
         >
-          <TransitionGroup
+          <transition-group
             type="transition"
             tag="ul"
             :name="!drag ? 'fade' : undefined"
@@ -56,7 +56,7 @@
                 <el-button size="small" icon="Close" circle @click="data.splice(index, 1)" style="margin-left: 5px;" />
               </div>
             </li>
-          </TransitionGroup>
+          </transition-group>
         </vue-draggable>
       </div>
     </el-col>
@@ -120,7 +120,7 @@
               v-if="tags.size != 0 && data.length !== 0"
               type="success"
               @click="uploadCompositeMessage"
-            >上传
+            >{{ props.btn }}
             </el-button>
           </div>
         </el-row>
@@ -141,16 +141,25 @@ import type {
   UnUploadTextMessage,
   UnUploadVideoMessage,
 } from '@/api/upload'
-import { type BaseResp, client, uploadFile } from '@/api/api'
+import { type BaseResp, uploadFile } from '@/api/api'
 import { useTagsStore } from '@/store/tags'
 import CornerIcon from '@/components/CornerIcon.vue'
 import { VueDraggable } from 'vue-draggable-plus'
 import { now } from '@vueuse/core'
 
-const data = ref<UnUploadMessage[]>([])
+interface PropsType {
+  data?: UnUploadMessage[],
+  tags?: number[],
+  btn: string,
+  onUpload: (data: { messages, tags: number[] }) => BaseResp
+}
+
+const props = defineProps<PropsType>()
+
+const data = ref<UnUploadMessage[]>(props.data ?? [])
 const temp = ref<UnUploadMessage>({ type: 'IMAGE' })
 const inputValue = ref<number>()
-const tags = ref(new Set<number>())
+const tags = ref(new Set<number>(props.tags ?? []))
 const choose = ref()
 const { tagInfo } = useTagsStore()
 
@@ -176,13 +185,21 @@ function showAddBtn() {
     : choose.value?.file != null
 }
 
-function addToData() {
-  data.value.push({
-    ...temp.value!, ...choose.value?.metaInfo ?? {},
-    url: choose.value?.fileUrl,
-    file: choose.value?.file,
-    index: now(),
-  })
+async function addToData() {
+  console.log(temp.value)
+  if (temp.value.type === 'TEXT') data.value.push({ ...temp.value!, index: now() })
+  else {
+    const rawFile = choose.value?.file
+    const blob = new Blob([await rawFile.raw.arrayBuffer()])
+    data.value.push({
+      ...temp.value!, ...choose.value?.metaInfo ?? {},
+      url: choose.value?.fileUrl,
+      blob,
+      url: URL.createObjectURL(blob),
+      format: rawFile.name.substring(rawFile.name.lastIndexOf('.') + 1),
+      index: now(),
+    })
+  }
   temp.value = { type: temp.value.type }
   if (temp.value.type === 'TEXT') (temp.value as UnUploadTextMessage).content = ''
   choose.value?.clear()
@@ -195,13 +212,12 @@ async function uploadCompositeMessage() {
       return { type: 'text', content: (e as UnUploadTextMessage).content }
     }
     const media = e as UnUploadMediaMessage
-    const rawFile = media.file!
-    const blob = new Blob([await rawFile.raw!.arrayBuffer()])
+    const blob = media.blob!
     const id = await uploadFile(blob)
     return {
       id,
-      type: 'image',
-      format: rawFile.name.substring(rawFile.name.lastIndexOf('.') + 1),
+      type: e.type.toLowerCase(),
+      format: media.format,
       file: false,
       width: media.width,
       height: media.height,
@@ -209,10 +225,7 @@ async function uploadCompositeMessage() {
     }
   }))
 
-  const resp = await client.put<BaseResp>('/api/message', {
-    chain: messages,
-    tags: Array.from(tags.value),
-  }).then(e => e.data)
+  const resp = await onUpload({ chain: messages, tags: Array.from(tags.value) })
   if (!resp.success) {
     ElMessage({
       type: 'warning',

@@ -39,7 +39,7 @@
   </div>
   <el-dialog draggable title="编辑" v-model="isShowEdit" destroy-on-close width="80%">
     <div style="height: 60vh">
-      <message-builder :data="editing" :tags="editTags" :on-upload="handleUpload" btn="更新" />
+      <message-builder :id="id" :data="editing" :tags="editTags" :on-upload="handleUpload" btn="更新" @upload-done="isShowEdit = false; refresh()" />
     </div>
   </el-dialog>
   <page-selector
@@ -69,14 +69,16 @@ const selectedTagId = ref<number>()
 const { tagInfo } = useTagsStore()
 
 const isShowEdit = ref(false)
+const id = ref<number>()
 const editing = ref<UnUploadMessage[]>([])
 const editTags = ref<number[]>([])
 
-async function handleUpload(data: {chain, tags: number[]}): BaseResp {
+async function handleUpload(data): BaseResp {
   return await client.put<BaseResp>('/api/message', data).then(e => e.data)
 }
 
 async function showEdit(message: MessageData) {
+  id.value = message.id
   editing.value = await toUnUpload(message)
   editTags.value = message.tags
   isShowEdit.value = true

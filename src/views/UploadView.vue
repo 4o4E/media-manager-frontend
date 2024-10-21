@@ -9,8 +9,8 @@ import { type BaseResp, client } from '@/api/api'
 
 requireAuth()
 
-async function handleUpload(data: {messages, tags: number[]}): BaseResp {
-  return await client.put<BaseResp>('/api/message', data).then(e => e.data)
+async function handleUpload(data): BaseResp {
+  return await client.post<BaseResp>('/api/message', data).then(e => e.data)
 }
 </script>
 

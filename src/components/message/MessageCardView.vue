@@ -34,7 +34,7 @@
       />
       <el-dialog draggable title="编辑" v-model="isShowEdit" width="80%">
         <div style="height: 60vh">
-          <message-builder :data="editing" :tags="tags" :on-upload="handleUpload" btn="更新" />
+          <message-builder :id="id" :data="editing" :tags="tags" :on-upload="handleUpload" btn="更新" @upload-done="isShowEdit = false" />
         </div>
       </el-dialog>
     </div>
@@ -72,14 +72,16 @@ function showDetail(viewData: MessageViewData) {
 }
 
 const isShowEdit = ref(false)
+const id = ref<number>()
 const editing = ref<UnUploadMessage[]>([])
 const tags = ref<number[]>([])
 
-async function handleUpload(data: { chain, tags: number[] }): BaseResp {
+async function handleUpload(data): BaseResp {
   return await client.put<BaseResp>('/api/message', data).then(e => e.data)
 }
 
 async function showEdit() {
+  id.value = message.id
   editing.value = await toUnUpload(message)
   tags.value = message.tags
   isShowEdit.value = true

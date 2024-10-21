@@ -148,6 +148,7 @@ import { VueDraggable } from 'vue-draggable-plus'
 import { now } from '@vueuse/core'
 
 interface PropsType {
+  id?: string,
   data?: UnUploadMessage[],
   tags?: number[],
   btn: string,
@@ -204,6 +205,8 @@ async function addToData() {
   choose.value?.clear()
 }
 
+const emit = defineEmits(['uploadDone'])
+
 async function uploadCompositeMessage() {
   // 上传各文件
   const messages = await Promise.all(data.value.map(async (e: UnUploadMessage) => {
@@ -224,7 +227,7 @@ async function uploadCompositeMessage() {
     }
   }))
 
-  const resp = await props.onUpload({ chain: messages, tags: Array.from(tags.value) })
+  const resp = await props.onUpload({ id: props.id, chain: messages, tags: Array.from(tags.value) })
   if (!resp.success) {
     ElMessage({
       type: 'warning',
@@ -243,6 +246,7 @@ async function uploadCompositeMessage() {
     if (url) URL.revokeObjectURL(url)
   })
   data.value = []
+  emit('uploadDone')
 }
 
 defineExpose({

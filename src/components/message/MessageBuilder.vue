@@ -186,7 +186,6 @@ function showAddBtn() {
 }
 
 async function addToData() {
-  console.log(temp.value)
   if (temp.value.type === 'TEXT') data.value.push({ ...temp.value!, index: now() })
   else {
     const rawFile = choose.value?.file
@@ -225,7 +224,7 @@ async function uploadCompositeMessage() {
     }
   }))
 
-  const resp = await onUpload({ chain: messages, tags: Array.from(tags.value) })
+  const resp = await props.onUpload({ chain: messages, tags: Array.from(tags.value) })
   if (!resp.success) {
     ElMessage({
       type: 'warning',

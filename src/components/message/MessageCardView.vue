@@ -76,7 +76,7 @@ const editing = ref<UnUploadMessage[]>([])
 const tags = ref<number[]>([])
 
 async function handleUpload(data: { chain, tags: number[] }): BaseResp {
-  await client.put<BaseResp>('/api/message', data).then(e => e.data)
+  return await client.put<BaseResp>('/api/message', data).then(e => e.data)
 }
 
 async function showEdit() {

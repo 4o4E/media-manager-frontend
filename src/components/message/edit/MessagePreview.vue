@@ -24,14 +24,8 @@
     </div>
     <div style="display: block; margin: 10px;">
       <div>
-        <el-text v-if="message.type === 'IMAGE'">类型: 图片</el-text>
-        <el-text v-else-if="message.type === 'VIDEO'">类型: 视频</el-text>
-        <el-text v-else-if="message.type === 'AUDIO'">类型: 音频</el-text>
-        <el-text v-else-if="message.type === 'TEXT'">类型: 文本</el-text>
-      </div>
-      <div>
         <el-text>
-          上传于: {{ moment(props.message.time).format('YYYY-MM-DD HH:mm:ss') }}
+          上传于: {{ moment(props.message.time).format('YYYY.MM.DD HH:mm:ss') }}
         </el-text>
       </div>
       <div style="display: flex;">

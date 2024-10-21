@@ -1,24 +1,26 @@
 <template>
   <div style="display: flex">
     <div :style="`width: ${width}px`">
-      <img
-        v-if="message.type == 'IMAGE'"
-        :src="`/api/file/${(props.message.content[0] as ImageMessage)!.id}`"
-        :alt="`/api/file/${(props.message.content[0] as ImageMessage)!.id}`"
-        :style="`width: ${width}px`"
-      />
-      <video
-        v-if="message.type == 'VIDEO' || message.type == 'AUDIO'"
-        :src="`/api/file/${(props.message.content[0] as ImageMessage)!.id}`"
-        :style="`width: ${width}px`"
-      />
-      <textarea
-        :style="`min-width: ${width}px; max-width: ${width}px; min-height: 50px`"
-        :rows="5"
-        v-if="message.type == 'TEXT'"
-        disabled
-        v-model="(message.content[0] as TextMessage).content"
-      />
+      <div v-for="(el, index) in message.content" :key="index" style="margin: 5px 0">
+        <img
+          v-if="el.type == 'image'"
+          :src="`/api/file/${(props.message.content[0] as ImageMessage)!.id}`"
+          :alt="`/api/file/${(props.message.content[0] as ImageMessage)!.id}`"
+          :style="`width: ${width}px`"
+        />
+        <video
+          v-if="el.type == 'video' || el.type == 'audio'"
+          :src="`/api/file/${(props.message.content[0] as ImageMessage)!.id}`"
+          :style="`width: ${width}px`"
+        />
+        <el-input
+          :style="`min-width: ${width}px; max-width: ${width}px; min-height: 50px`"
+          autosize
+          v-if="el.type == 'text'"
+          disabled
+          v-model="(message.content[0] as TextMessage).content"
+        />
+      </div>
     </div>
     <div style="display: block; margin: 10px;">
       <div>

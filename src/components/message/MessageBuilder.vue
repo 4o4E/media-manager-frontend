@@ -67,12 +67,14 @@
         <div>
           <!-- 选择类型 -->
           <el-row>
-            <el-select v-model="temp.type" @change="changeType" style="max-width: 120px;">
-              <el-option label="图片" value="IMAGE" />
-              <el-option label="视频" value="VIDEO" />
-              <el-option label="音频" value="AUDIO" />
-              <el-option label="文本" value="TEXT" />
-            </el-select>
+            <el-button-group>
+              <el-button
+                v-for="(label, type) in types"
+                :key="type"
+                :type="temp.type === type ? 'primary' : undefined"
+                @click="changeType(type)"
+              >{{ label }}</el-button>
+            </el-button-group>
             <el-button
               v-if="showAddBtn()"
               type="primary"
@@ -147,6 +149,13 @@ import CornerIcon from '@/components/CornerIcon.vue'
 import { VueDraggable } from 'vue-draggable-plus'
 import { now } from '@vueuse/core'
 
+const types = {
+  'IMAGE': '图片',
+  'VIDEO': '视频',
+  'AUDIO': '音频',
+  'TEXT': '文本',
+}
+
 interface PropsType {
   id?: string,
   data?: UnUploadMessage[],
@@ -175,9 +184,10 @@ function addTag() {
   inputValue.value = undefined
 }
 
-function changeType(t: 'IMAGE' | 'VIDEO' | 'AUDIO' | 'TEXT') {
+function changeType(type: 'IMAGE' | 'VIDEO' | 'AUDIO' | 'TEXT') {
+  temp.value.type = type
   choose.value?.clear()
-  if (t === 'TEXT') temp.value = { type: 'TEXT', content: '' }
+  if (type === 'TEXT') temp.value = { type: 'TEXT', content: '' }
 }
 
 function showAddBtn() {

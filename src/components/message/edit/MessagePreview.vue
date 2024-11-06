@@ -4,13 +4,13 @@
       <div v-for="(el, index) in message.content" :key="index" style="margin: 5px 0">
         <img
           v-if="el.type == 'image'"
-          :src="`/api/file/${(props.message.content[0] as ImageMessage)!.id}`"
-          :alt="`/api/file/${(props.message.content[0] as ImageMessage)!.id}`"
+          :src="`/api/file/${(el as ImageMessage)!.id}`"
+          :alt="`/api/file/${(el as ImageMessage)!.id}`"
           :style="`width: ${width}px`"
         />
         <video
           v-if="el.type == 'video' || el.type == 'audio'"
-          :src="`/api/file/${(props.message.content[0] as ImageMessage)!.id}`"
+          :src="`/api/file/${(el as ImageMessage)!.id}`"
           :style="`width: ${width}px`"
         />
         <el-input

@@ -6,7 +6,7 @@
       <div style="margin: 10px 0">
         <div v-if="data.length === 0" v-bind:style="{
           border: '1px #777 dashed',
-          borderRadius: '15px',
+          borderRadius: '5px',
           minHeight: '200px',
           display: 'flex',
           alignItems: 'center',
@@ -199,14 +199,16 @@ function showAddBtn() {
 async function addToData() {
   if (temp.value.type === 'TEXT') data.value.push({ ...temp.value!, index: now() })
   else {
-    const rawFile = choose.value?.file
-    const blob = new Blob([await rawFile.raw.arrayBuffer()])
+    console.log({
+      ...temp.value!, ...choose.value?.metaInfo ?? {},
+      url: choose.value!.fileUrl,
+      blob: choose.value!.file,
+      index: now(),
+    })
     data.value.push({
       ...temp.value!, ...choose.value?.metaInfo ?? {},
-      url: choose.value?.fileUrl,
-      blob,
-      url: URL.createObjectURL(blob),
-      format: rawFile.name.substring(rawFile.name.lastIndexOf('.') + 1),
+      url: choose.value!.fileUrl,
+      blob: choose.value!.file,
       index: now(),
     })
   }

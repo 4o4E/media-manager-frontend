@@ -4,13 +4,13 @@
       <div v-for="(el, index) in message.content" :key="index" style="margin: 5px 0">
         <img
           v-if="el.type == 'image'"
-          :src="`/api/file/${(el as ImageMessage)!.id}`"
-          :alt="`/api/file/${(el as ImageMessage)!.id}`"
+          :src="`/api/file/${(el as ImageElement)!.id}`"
+          :alt="`/api/file/${(el as ImageElement)!.id}`"
           :style="`width: ${width}px`"
         />
         <video
           v-if="el.type == 'video' || el.type == 'audio'"
-          :src="`/api/file/${(el as ImageMessage)!.id}`"
+          :src="`/api/file/${(el as ImageElement)!.id}`"
           :style="`width: ${width}px`"
         />
         <el-input
@@ -18,7 +18,7 @@
           autosize
           v-if="el.type == 'text'"
           disabled
-          v-model="(message.content[0] as TextMessage).content"
+          v-model="(message.content[0] as TextElement).content"
         />
       </div>
     </div>
@@ -31,7 +31,7 @@
       <div style="display: flex;">
         <tag-list :tags="message.tags" size="default" />
         <el-button
-          v-if="auth.perms.includes('message:edit')"
+          v-if="auth.perms.includes('media:edit')"
           :icon="EditPen"
           circle
           @click="emit('edit')"
@@ -43,7 +43,7 @@
 
 <script setup lang="ts">
 import moment from 'moment'
-import { type ImageMessage, type MessageData, type TextMessage } from '@/api/type'
+import { type ImageElement, type MessageData, type TextElement } from '@/api/types/media'
 import TagList from '@/components/message/TagList.vue'
 import { auth } from '@/api/auth'
 import { EditPen } from '@element-plus/icons-vue'

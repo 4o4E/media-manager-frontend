@@ -1,36 +1,37 @@
-import type { MessageData } from '@/api/type'
-import type { UnUploadMediaMessage } from '@/api/upload'
+import type { MessageData, TextElement } from '@/api/types/media'
+import type { UnUploadMediaElement } from '@/api/upload'
 import { client } from '@/api/api'
 import { now } from '@vueuse/core'
+import { MediaType } from '@/api/types/media'
 
 export async function toUnUpload(data: MessageData) {
   return await Promise.all(data.content.map(async e => {
     const index = now()
-    if (e.type === 'text') {
+    if (e.type === MediaType.TEXT) {
       return {
         index,
-        type: 'TEXT',
-        content: e.content,
+        type: e.type,
+        content: (e as TextElement).content,
       }
     }
-    const media = e as UnUploadMediaMessage
+    const media = e as UnUploadMediaElement
     const blob = await toBlob(`/api/file/${media.id}.${media.format}`)
     const url = URL.createObjectURL(blob)
     switch (e.type) {
-      case 'audio':
+      case MediaType.AUDIO:
         return {
           index,
-          type: 'AUDIO',
+          type: e.type,
           file: false,
           format: media.format,
           length: media.length,
           blob,
           url,
         }
-      case 'image':
+      case MediaType.IMAGE:
         return {
           index,
-          type: 'IMAGE',
+          type: e.type,
           file: false,
           format: media.format,
           width: media.width,
@@ -38,10 +39,10 @@ export async function toUnUpload(data: MessageData) {
           blob,
           url,
         }
-      case 'video':
+      case MediaType.VIDEO:
         return {
           index,
-          type: 'VIDEO',
+          type: e.type,
           file: false,
           format: media.format,
           width: media.width,
@@ -56,7 +57,7 @@ export async function toUnUpload(data: MessageData) {
   }))
 }
 
-async function toBlob(url: string): Blob {
+async function toBlob(url: string): Promise<Blob> {
   return await client.get<Blob>(url, {
     responseType: 'blob',
   }).then(res => res.data)

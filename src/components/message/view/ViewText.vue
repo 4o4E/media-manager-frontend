@@ -1,7 +1,7 @@
 <template>
   <div>
     <div>
-      <el-text>{{ (props.message.content[0] as TextMessage).content }}</el-text>
+      <el-text>{{ (props.message.content[0] as TextElement).content }}</el-text>
       <!--      <div>-->
       <!--        <el-text>类型: 文本</el-text>-->
       <!--      </div>-->
@@ -15,7 +15,7 @@
 </template>
 
 <script setup lang="ts">
-import { type MessageData, type TextMessage } from '@/api/type'
+import { type MessageData, type TextElement } from '@/api/types/media'
 
 interface PropsType {
   message: MessageData

@@ -1,106 +1,80 @@
 <template>
-  <div>
-    <div class="tags">
-      <el-tag
-        v-for="tag in tags"
-        :key="tag"
-        closable
-        :disable-transitions="false"
-        size="large"
-        @close="handleClose(tag)"
-      >{{ tagInfo.tagsMap[tag].name }}
-      </el-tag>
-    </div>
-    <div class="flex gap-2">
-      <el-select-v2
-        style="margin-bottom: 10px; width: 160px;"
-        v-model="selectedTagId"
-        :options="tagInfo.options"
-        @change="onChange"
-        filterable
-        placeholder="选择标签"
-      />
+  <el-affix :offset="82">
+    <div class="search-box">
+      <search-mode-selector v-model="queryMode" />
+      <tag-selector v-model="tags" />
       <el-button
-        v-if="tags.size !== 0"
+        v-if="tags.length !== 0"
         type="success"
-        @click="search(true)"
+        @click="search"
       >搜索
       </el-button>
-      <el-select v-model="queryMode" style="width: 150px">
-        <el-option label="包含任意标签" :value="0" />
-        <el-option label="包含所有标签" :value="1" />
-      </el-select>
     </div>
-  </div>
-  <el-divider />
-  <message-flow-view :load="load" ref="flow" @fetch="search(false)" />
+  </el-affix>
+  <message-flow-view :isLoading="isLoading" ref="flow" @fetch="search" />
 </template>
 
 <script setup lang="ts">
 import { requireAuth } from '@/api/auth'
 import { ref } from 'vue'
-import type { MessageData } from '@/api/type'
-import { type BaseResp, client } from '@/api/api'
-import { ElMessage, ElSelectV2 } from 'element-plus'
+import { type BaseResp, client, stringify } from '@/api/api'
+import { SearchType } from '@/api/type'
+import { ElAffix, ElMessage } from 'element-plus'
 import MessageFlowView from '@/components/message/MessageFlowView.vue'
-import { useTagsStore } from '@/store/tags'
+import type { MessageData } from '@/api/types/media'
+import TagSelector from '@/components/message/TagSelector.vue'
+import SearchModeSelector from '@/components/SearchModeSelector.vue'
 
 requireAuth()
 
-const load = ref(false)
+const isLoading = ref(false)
 
-const queryMode = ref<0 | 1>(0)
+const queryMode = ref<SearchType>(SearchType.ANY)
 const flow = ref()
 
-const tags = ref<Set<number>>(new Set())
-const selectedTagId = ref<number>()
-const { tagInfo } = useTagsStore()
+const tags = ref<bigint[]>([])
 
-async function search(clear: boolean) {
-  load.value = true
-  const resp = await client.post<BaseResp<MessageData[]>>('/api/message/query', {
+let lastQuery = ''
+
+async function search() {
+  if (isLoading.value || tags.value.length === 0) return
+  isLoading.value = true
+  const query = {
     queryMode: queryMode.value,
     tags: Array.from(tags.value),
     count: 10,
     type: 'IMAGE'
-  }).then(e => e.data)
+  }
+  const queryJson = stringify(query)
+  const clear = lastQuery !== queryJson
+  const flowValue = flow.value!
+  if (clear) {
+    flowValue.clear()
+    lastQuery = queryJson
+  }
+  const resp = await client.post<BaseResp<MessageData[]>>('/api/media/query', query).then(e => e.data)
   if (!resp.success) {
     ElMessage({
       type: 'warning',
       message: resp.message
     })
+    isLoading.value = false
     return
   }
-  if (clear) flow.value.clear()
-  flow.value.receive(resp.data!)
-}
-
-function handleClose(tag: number) {
-  tags.value.delete(tag)
-}
-
-function onChange() {
-  if (selectedTagId.value) {
-    tags.value.add(selectedTagId.value)
-  }
-  selectedTagId.value = undefined
+  flowValue.receive(resp.data!)
+  setTimeout(() => isLoading.value = false, 200)
 }
 </script>
 
 <style scoped>
-.flex {
-  display: flex;
-}
-
-.gap-2 {
-  grid-gap: 0.5rem;
-  gap: 0.5rem;
-}
-
-.tags {
+.search-box {
+  margin: 20px 20px 20px 10px;
   display: flex;
   grid-gap: 0.5rem;
   gap: 0.5rem;
-  margin-bottom: 10px;
+  padding: 20px;
+  background-color: var(--el-bg-color-overlay);
+  border: 1px solid var(--el-border-color-light);
+  border-radius: var(4px);
 }
 </style>

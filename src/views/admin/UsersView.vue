@@ -71,11 +71,17 @@
 
   <!-- 分配角色 -->
   <el-dialog draggable v-model="allocateRoleFormVisible" title="分配角色" width="50%">
-    <el-table ref="multipleTableRef" :data="allRoleList" style="width: 100%" @select="allocateSelect">
+    <el-table ref="multipleTableRef" :data="allRoleList" style="width: 100%">
       <el-table-column type="selection" width="55" />
       <el-table-column prop="name" label="角色名" width="180" />
       <el-table-column prop="description" label="角色备注" />
     </el-table>
+    <template #footer>
+      <div class="dialog-footer">
+        <el-button @click="allocateRoleFormVisible = false">取消</el-button>
+        <el-button type="primary" @click="updateRole()">提交</el-button>
+      </div>
+    </template>
   </el-dialog>
 
   <!-- 页脚 -->
@@ -153,17 +159,18 @@ async function onClick(row: User, type: StatusType) {
         })
         return
       }
+      allocateUser.value = row
       allocateRoleFormVisible.value = true
       // 更新所有角色列表
-      await Promise.all([updateAllRoleList(), updateUserRoleList(row.id)])
-      allocateUserId.value = row.id
+      await updateAllRoleList()
+      await updateUserRoleList(row)
       break
     }
   }
 }
 
 async function delUser(row: User) {
-  if (row.id === 1) {
+  if (row.id === BigInt(1)) {
     ElMessage({
       type: 'warning',
       message: '不可删除',
@@ -234,7 +241,7 @@ async function updateUser() {
 }
 
 interface UpdatePasswordForm {
-  id: number
+  id: bigint
   password: string
 }
 
@@ -254,6 +261,9 @@ const multipleTableRef = ref<InstanceType<typeof ElTable>>()
 const allRoleList = ref<Role[]>([])
 
 async function updateAllRoleList() {
+  if (allRoleList.value.length > 0) {
+    return
+  }
   const resp = await client.get<BaseResp<Role[]>>('/api/admin/roles/all').then(e => e.data)
   if (!resp.success) {
     ElMessage({
@@ -265,49 +275,33 @@ async function updateAllRoleList() {
   allRoleList.value = resp.data!
 }
 
-async function updateUserRoleList(uid: number) {
-  const resp = await client.get<BaseResp<Role[]>>(`/api/admin/users/${uid}/roles`).then(e => e.data)
-  const ids = resp.data!.map(e => e.id)
-  allRoleList.value.filter(role => ids.includes(role.id)).forEach(e => {
+async function updateUserRoleList(row: User) {
+  allRoleList.value.filter(role => row.roles.includes(role.id)).forEach(e => {
     multipleTableRef.value!.toggleRowSelection(e, true)
   })
 }
 
-const allocateUserId = ref<number>(0)
+const allocateUser = ref<User>()
 const allocateRoleFormVisible = ref(false)
 
-async function allocateSelect(selection: Role[], row: Role) {
-  if (selection.includes(row)) {
-    // 勾选操作
-    const resp = await client.post<BaseResp>(`/api/admin/users/${allocateUserId.value}/roles/${row.id}`).then(e => e.data)
-    if (!resp.success) {
-      ElMessage({
-        type: 'warning',
-        message: resp.message,
-      })
-      allocateRoleFormVisible.value = false
-      return
-    }
-    ElMessage({
-      type: 'success',
-      message: '分配成功',
-    })
-    return
-  }
-  // 取消勾选
-  const resp = await client.delete<BaseResp>(`/api/admin/users/${allocateUserId.value}/roles/${row.id}`).then(e => e.data)
+async function updateRole() {
+  const selected = multipleTableRef.value!.getSelectionRows() as Role[]
+  const resp = await client.patch<BaseResp>('/api/admin/users', {
+    ...allocateUser.value, roles: selected.map(e => e.id)
+  }).then(e => e.data)
   if (!resp.success) {
     ElMessage({
       type: 'warning',
       message: resp.message,
     })
-    allocateRoleFormVisible.value = false
     return
   }
   ElMessage({
     type: 'success',
     message: '分配成功',
   })
+  allocateRoleFormVisible.value = false
+  await refresh()
 }
 </script>
 

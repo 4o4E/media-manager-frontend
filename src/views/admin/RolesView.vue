@@ -40,7 +40,7 @@
         <el-input v-model="updateRoleForm!.name" />
       </el-form-item>
       <el-form-item required label="角色描述">
-        <el-input v-model="updateRoleForm!.description" />
+        <el-input v-model="updateRoleForm!.remark" />
       </el-form-item>
     </el-form>
     <template #footer>
@@ -52,18 +52,23 @@
   </el-dialog>
 
   <!-- 分配权限 -->
-  <el-dialog draggable v-model="allocateRoleFormVisible" title="分配权限" width="70%" top="5vh">
+  <el-dialog draggable v-model="allocatePermFormVisible" title="分配权限" width="70%" top="5vh">
     <el-table
       ref="multipleTableRef"
       :data="allPermList"
       style="width: 100%; height: 80vh"
-      @select="allocateSelect"
       stripe
     >
       <el-table-column type="selection" width="55" />
       <el-table-column prop="perm" label="权限节点" />
       <el-table-column prop="desc" label="描述" />
     </el-table>
+    <template #footer>
+      <div class="dialog-footer">
+        <el-button @click="allocatePermFormVisible = false">取消</el-button>
+        <el-button type="primary" @click="updatePerm()">提交</el-button>
+      </div>
+    </template>
   </el-dialog>
 
   <!-- 页脚 -->
@@ -77,7 +82,7 @@
 
 <script setup lang="ts">
 import { requireAuth } from '@/api/auth'
-import type { Role, User } from '@/api/type'
+import type { Perm, Role, User } from '@/api/type'
 import { ref } from 'vue'
 import { type BaseResp, client } from '@/api/api'
 import { ElMessage, ElTable } from 'element-plus'
@@ -127,17 +132,18 @@ async function onClick(row: Role, type: StatusType) {
       break
     }
     case 'perm': {
-      allocateRoleFormVisible.value = true
+      allocateRole.value = row
+      allocatePermFormVisible.value = true
       // 更新所有权限列表
-      await Promise.all([updateAllPermList(), updateCurrentRoleList(row.id)])
-      allocateRoleId.value = row.id
+      await updateAllPermList()
+      await updateCurrentRoleList(row)
       break
     }
   }
 }
 
 async function delRole(row: User) {
-  if (row.id === 1) {
+  if (row.id === BigInt(1)) {
     ElMessage({
       type: 'warning',
       message: '不可删除',
@@ -206,16 +212,14 @@ async function updateRole() {
   await refresh()
 }
 
-interface Perm {
-  name: string
-  desc: string
-}
-
 const multipleTableRef = ref<InstanceType<typeof ElTable>>()
 const allPermList = ref<Perm[]>([])
 
 async function updateAllPermList() {
-  const resp = await client.get<BaseResp<string[]>>('/api/admin/roles/allPerm').then(e => e.data)
+  if (allPermList.value.length > 0) {
+    return
+  }
+  const resp = await client.get<BaseResp<Perm[]>>('/api/admin/roles/allPerm').then(e => e.data)
   if (!resp.success) {
     ElMessage({
       type: 'warning',
@@ -226,49 +230,33 @@ async function updateAllPermList() {
   allPermList.value = resp.data!
 }
 
-async function updateCurrentRoleList(roleId: number) {
-  const resp = await client.get<BaseResp<string[]>>(`/api/admin/roles/${roleId}/perms`).then(e => e.data)
-  const perms = resp.data!
-  allPermList.value.filter(perm => perms.includes(perm.perm)).forEach(e => {
+async function updateCurrentRoleList(row: Role) {
+  allPermList.value.filter(perm => row.perms.includes(perm.perm)).forEach(e => {
     multipleTableRef.value!.toggleRowSelection(e, true)
   })
 }
 
-const allocateRoleId = ref<number>(0)
-const allocateRoleFormVisible = ref(false)
+const allocateRole = ref<Role>()
+const allocatePermFormVisible = ref(false)
 
-async function allocateSelect(selection: Perm[], row: Perm) {
-  if (selection.includes(row)) {
-    // 勾选操作
-    const resp = await client.post<BaseResp>(`/api/admin/roles/${allocateRoleId.value}/perms/${row.perm}`).then(e => e.data)
-    if (!resp.success) {
-      ElMessage({
-        type: 'warning',
-        message: resp.message,
-      })
-      allocateRoleFormVisible.value = false
-      return
-    }
-    ElMessage({
-      type: 'success',
-      message: '分配成功',
-    })
-    return
-  }
-  // 取消勾选
-  const resp = await client.delete<BaseResp>(`/api/admin/roles/${allocateRoleId.value}/perms/${row.perm}`).then(e => e.data)
+async function updatePerm() {
+  const selected = multipleTableRef.value!.getSelectionRows() as Perm[]
+  const resp = await client.patch<BaseResp>('/api/admin/roles', {
+    ...allocateRole.value, perms: selected.map(e => e.perm)
+  }).then(e => e.data)
   if (!resp.success) {
     ElMessage({
       type: 'warning',
       message: resp.message,
     })
-    allocateRoleFormVisible.value = false
     return
   }
   ElMessage({
     type: 'success',
     message: '分配成功',
   })
+  allocatePermFormVisible.value = false
+  await refresh()
 }
 </script>
 

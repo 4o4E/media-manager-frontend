@@ -16,8 +16,8 @@
         ref="image"
         class="detail"
         v-if="message.message.type === 'IMAGE'"
-        :src="`/api/file/${(message.message.content[0] as ImageMessage).id}.${(message.message.content[0] as ImageMessage).format}`"
-        :alt="(message.message.content[0] as ImageMessage).id"
+        :src="`/api/file/${(message.message.content[0] as ImageElement).id}.${(message.message.content[0] as ImageElement).format}`"
+        :alt="(message.message.content[0] as ImageElement).id"
         draggable="false"
         @load="autoScale"
       />
@@ -58,7 +58,7 @@
 </template>
 
 <script setup lang="ts">
-import type { ImageMessage, MessageViewData } from '@/api/type'
+import type { ImageElement, MessageViewData } from '@/api/types/media'
 import { onMounted, onUnmounted, ref, toRef } from 'vue'
 import { ArrowLeft, ArrowRight, Minus, Plus, Promotion } from '@element-plus/icons-vue'
 
@@ -67,8 +67,8 @@ interface PropsType {
 }
 
 const props = defineProps<PropsType>()
-const imgW = toRef(() => (props.message.message.content[0] as ImageMessage).width)
-const imgH = toRef(() => (props.message.message.content[0] as ImageMessage).height)
+const imgW = toRef(() => (props.message.message.content[0] as ImageElement).width)
+const imgH = toRef(() => (props.message.message.content[0] as ImageElement).height)
 const emit = defineEmits(['next', 'prev', 'close'])
 const image = ref<HTMLElement>()
 const mask = ref<HTMLElement>()

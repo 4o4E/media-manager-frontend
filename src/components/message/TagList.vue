@@ -4,7 +4,7 @@
       <el-tag
         type="primary"
         :size="props.size ?? 'large'" style="margin: 2px 5px"
-      >{{ tagInfo.tagsMap[tag]?.name ?? tag }}</el-tag>
+      >{{ tagInfo.tagsMap.get(tag)?.names[0] ?? tag }}</el-tag>
     </template>
   </div>
 </template>
@@ -13,7 +13,7 @@
 import { useTagsStore } from '@/store/tags'
 
 interface PropsType {
-  tags: number[]
+  tags: bigint[]
   size: "small" | "default" | "large"
 }
 

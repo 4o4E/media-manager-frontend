@@ -6,11 +6,12 @@
 import { requireAuth } from '@/api/auth'
 import MessageBuilder from '@/components/message/MessageBuilder.vue'
 import { type BaseResp, client } from '@/api/api'
+import type { MediaContentDto } from '@/api/types/media'
 
 requireAuth()
 
-async function handleUpload(data): BaseResp {
-  return await client.post<BaseResp>('/api/message', data).then(e => e.data)
+async function handleUpload(data: MediaContentDto): Promise<BaseResp> {
+  return await client.post<BaseResp>('/api/media', data).then(e => e.data)
 }
 </script>
 

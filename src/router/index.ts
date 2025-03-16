@@ -49,9 +49,9 @@ const router = createRouter({
       component: () => import('@/views/admin/TagsView.vue'),
     },
     {
-      path: '/admin/messages',
+      path: '/admin/media',
       name: 'MessagesManager',
-      component: () => import('@/views/admin/MessagesView.vue'),
+      component: () => import('@/views/admin/MediasView.vue'),
     },
   ],
 })

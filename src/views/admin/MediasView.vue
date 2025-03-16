@@ -8,13 +8,14 @@
         :disable-transitions="false"
         size="large"
         @close="handleClose(tag)"
-      >{{ tagInfo.tagsMap[tag].name }}
+      >{{ tagInfo.tagsMap.get(tag)!.names[0] }}
       </el-tag>
     </div>
     <div class="flex gap-2">
       <el-select-v2
         style="margin-bottom: 10px; width: 160px;"
         v-model="selectedTagId"
+        value-key="vk"
         :options="tagInfo.options"
         @change="onChange"
         filterable
@@ -22,7 +23,7 @@
       />
       <el-button
         type="success"
-        @click="refresh(true)"
+        @click="refresh"
       >搜索</el-button>
       <el-select v-model="queryMode" style="width: 150px">
         <el-option label="包含任意标签" :value="0" />
@@ -52,29 +53,29 @@
 
 <script setup lang="ts">
 import { type BaseResp, client, type PageResp } from '@/api/api'
-import type { MessageData } from '@/api/type'
+import type { MediaContentDto, MessageData } from '@/api/types/media'
 import { ElMessage, ElSelectV2, ElDivider } from 'element-plus'
 import { ref } from 'vue'
 import { useTagsStore } from '@/store/tags'
 import PageSelector from '@/components/PageSelector.vue'
 import MessagePreview from '@/components/message/edit/MessagePreview.vue'
 import MessageBuilder from '@/components/message/MessageBuilder.vue'
-import type { UnUploadMessage } from '@/api/upload'
+import type { UnUploadElement } from '@/api/upload'
 import { toUnUpload } from '@/api/convert'
 
 const tagsRef = ref<HTMLElement>()
 const queryMode = ref<0 | 1>(0)
-const tags = ref<Set<number>>(new Set())
-const selectedTagId = ref<number>()
+const tags = ref<Set<bigint>>(new Set())
+const selectedTagId = ref<bigint>()
 const { tagInfo } = useTagsStore()
 
 const isShowEdit = ref(false)
-const id = ref<number>()
-const editing = ref<UnUploadMessage[]>([])
-const editTags = ref<number[]>([])
+const id = ref<bigint>()
+const editing = ref<UnUploadElement[]>([])
+const editTags = ref<bigint[]>([])
 
-async function handleUpload(data): BaseResp {
-  return await client.put<BaseResp>('/api/message', data).then(e => e.data)
+async function handleUpload(data: MediaContentDto): Promise<BaseResp> {
+  return await client.put<BaseResp>('/api/media', data).then(e => e.data)
 }
 
 async function showEdit(message: MessageData) {
@@ -84,7 +85,7 @@ async function showEdit(message: MessageData) {
   isShowEdit.value = true
 }
 
-function handleClose(tag: number) {
+function handleClose(tag: bigint) {
   tags.value.delete(tag)
 }
 
@@ -101,7 +102,7 @@ const size = ref(20)
 const total = ref(0)
 
 async function refresh() {
-  const resp = await client.post<BaseResp<PageResp<MessageData[]>>>('/api/admin/message', {
+  const resp = await client.post<BaseResp<PageResp<MessageData>>>('/api/admin/media', {
     queryMode: queryMode.value,
     tags: Array.from(tags.value),
     page: page.value,

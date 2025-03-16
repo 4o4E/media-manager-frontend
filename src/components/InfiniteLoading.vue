@@ -9,13 +9,13 @@
 import { ref } from 'vue'
 import { useIntersectionObserver } from '@vueuse/core'
 
-interface PropsInterface {
+interface PropsType {
   loadingText?: string
   finishedText?: string
   finished: boolean
 }
 
-const props = defineProps<PropsInterface>()
+const props = defineProps<PropsType>()
 
 const emit = defineEmits(['infinite'])
 

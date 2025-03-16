@@ -33,7 +33,7 @@
               :key="message.index"
             >
               <corner-icon
-                v-if="message.type === 'IMAGE'"
+                v-if="message.type === MediaType.IMAGE"
                 @close="data.splice(index, 1)"
               >
                 <img
@@ -43,16 +43,17 @@
                 />
               </corner-icon>
               <corner-icon
-                v-if="message.type === 'VIDEO' || message.type === 'AUDIO'"
+                v-if="message.type === MediaType.VIDEO || message.type === MediaType.AUDIO"
                 @close="data.splice(index, 1)"
               >
                 <video
-                  v-if="message.type === 'VIDEO' || message.type === 'AUDIO'"
+                  v-if="message.type === MediaType.VIDEO || message.type === MediaType.AUDIO"
                   :src="(message as UnUploadVideoMessage)?.url ?? ''"
                 />
               </corner-icon>
-              <div v-if="message.type === 'TEXT'" style="margin-bottom: 8px; display: flex;">
-                <el-input type="textarea" disabled :autosize="{ minRows: 1, maxRows: 10 }" v-model="(message as UnUploadTextMessage).content" />
+              <div v-if="message.type === MediaType.TEXT" style="margin-bottom: 8px; display: flex;">
+                <el-input type="textarea" disabled :autosize="{ minRows: 1, maxRows: 10 }"
+                          v-model="(message as UnUploadTextMessage).content" />
                 <el-button size="small" icon="Close" circle @click="data.splice(index, 1)" style="margin-left: 5px;" />
               </div>
             </li>
@@ -69,11 +70,12 @@
           <el-row>
             <el-button-group>
               <el-button
-                v-for="(label, type) in types"
-                :key="type"
-                :type="temp.type === type ? 'primary' : undefined"
-                @click="changeType(type)"
-              >{{ label }}</el-button>
+                v-for="(obj, data) in MediaTypes"
+                :key="data"
+                :type="temp.type === data ? 'primary' : undefined"
+                @click="changeType(obj.enum)"
+              >{{ obj.label }}
+              </el-button>
             </el-button-group>
             <el-button
               v-if="showAddBtn()"
@@ -85,9 +87,10 @@
           </el-row>
           <el-row>
             <!-- 选择文件 -->
-            <choose-file ref="choose" v-if="temp.type !== 'TEXT'" :choose-type="temp.type" :max-width="120" />
+            <choose-file ref="choose" v-if="temp.type !== MediaType.TEXT" :choose-type="temp.type" :max-width="120" />
             <!-- 输入文本 -->
-            <el-input v-else type="textarea" :autosize="{ minRows: 3 }" v-model="(temp as UnUploadTextMessage).content" />
+            <el-input v-else type="textarea" :autosize="{ minRows: 3 }"
+                      v-model="(temp as LocalTextElement).content" />
           </el-row>
         </div>
       </div>
@@ -103,7 +106,7 @@
               :disable-transitions="false"
               size="large"
               @close="handleClose(tag)"
-            >{{ tagInfo.tagsMap[tag].name }}
+            >{{ tagInfo.tagsMap.get(tag)!.names[0] }}
             </el-tag>
             <el-select-v2
               v-model="inputValue"
@@ -138,44 +141,44 @@ import ChooseFile from '@/components/message/choose/ChooseFile.vue'
 import { ElInput, ElMessage, ElSelectV2 } from 'element-plus'
 import type {
   UnUploadImageMessage,
-  UnUploadMediaMessage,
-  UnUploadMessage,
+  UnUploadMediaElement,
   UnUploadTextMessage,
-  UnUploadVideoMessage,
+  UnUploadVideoMessage
 } from '@/api/upload'
 import { type BaseResp, uploadFile } from '@/api/api'
 import { useTagsStore } from '@/store/tags'
 import CornerIcon from '@/components/CornerIcon.vue'
 import { VueDraggable } from 'vue-draggable-plus'
 import { now } from '@vueuse/core'
-
-const types = {
-  'IMAGE': '图片',
-  'VIDEO': '视频',
-  'AUDIO': '音频',
-  'TEXT': '文本',
-}
+import {
+  type LocalElement, type LocalTextElement,
+  type LocalVideoElement, type MediaContentDto,
+  type MediaElement,
+  MediaType,
+  MediaTypes,
+  type TextElement
+} from '@/api/types/media'
 
 interface PropsType {
-  id?: string,
-  data?: UnUploadMessage[],
-  tags?: number[],
+  id?: bigint,
+  data?: LocalElement[],
+  tags?: bigint[],
   btn: string,
-  onUpload: (data: { messages, tags: number[] }) => BaseResp
+  onUpload: (data: MediaContentDto) => Promise<BaseResp>
 }
 
 const props = defineProps<PropsType>()
 
-const data = ref<UnUploadMessage[]>(props.data ?? [])
-const temp = ref<UnUploadMessage>({ type: 'IMAGE' })
-const inputValue = ref<number>()
-const tags = ref(new Set<number>(props.tags ?? []))
+const data = ref<LocalElement[]>(props.data ?? [])
+const temp = ref<LocalElement>({ type: MediaType.IMAGE })
+const inputValue = ref<bigint>()
+const tags = ref(new Set<bigint>(props.tags ?? []))
 const choose = ref()
 const { tagInfo } = useTagsStore()
 
 const drag = ref(false)
 
-function handleClose(tag: number) {
+function handleClose(tag: bigint) {
   tags.value.delete(tag)
 }
 
@@ -184,36 +187,36 @@ function addTag() {
   inputValue.value = undefined
 }
 
-function changeType(type: 'IMAGE' | 'VIDEO' | 'AUDIO' | 'TEXT') {
+function changeType(type: MediaType) {
   temp.value.type = type
   choose.value?.clear()
-  if (type === 'TEXT') temp.value = { type: 'TEXT', content: '' }
+  if (type === MediaType.TEXT) temp.value = { type: MediaType.TEXT, content: '' }
 }
 
 function showAddBtn() {
-  return temp.value.type === 'TEXT'
+  return temp.value.type === MediaType.TEXT
     ? (temp.value as UnUploadTextMessage).content.length !== 0
     : choose.value?.file != null
 }
 
 async function addToData() {
-  if (temp.value.type === 'TEXT') data.value.push({ ...temp.value!, index: now() })
+  if (temp.value.type === MediaType.TEXT) data.value.push({ ...temp.value!, index: now() })
   else {
     console.log({
       ...temp.value!, ...choose.value?.metaInfo ?? {},
       url: choose.value!.fileUrl,
       blob: choose.value!.file,
-      index: now(),
+      index: now()
     })
     data.value.push({
       ...temp.value!, ...choose.value?.metaInfo ?? {},
       url: choose.value!.fileUrl,
       blob: choose.value!.file,
-      index: now(),
+      index: now()
     })
   }
   temp.value = { type: temp.value.type }
-  if (temp.value.type === 'TEXT') (temp.value as UnUploadTextMessage).content = ''
+  if (temp.value.type === MediaType.TEXT) (temp.value as UnUploadTextMessage).content = ''
   choose.value?.clear()
 }
 
@@ -221,40 +224,40 @@ const emit = defineEmits(['uploadDone'])
 
 async function uploadCompositeMessage() {
   // 上传各文件
-  const messages = await Promise.all(data.value.map(async (e: UnUploadMessage) => {
-    if (e.type === 'TEXT') {
-      return { type: 'text', content: (e as UnUploadTextMessage).content }
+  const messages: MediaElement[] = await Promise.all(data.value.map(async (e: LocalElement) => {
+    if (e.type === MediaType.TEXT) {
+      return e as TextElement
     }
-    const media = e as UnUploadMediaMessage
+    const media = e as LocalVideoElement
     const blob = media.blob!
     const id = await uploadFile(blob)
     return {
       id,
-      type: e.type.toLowerCase(),
+      type: e.type,
       format: media.format,
       file: false,
       width: media.width,
       height: media.height,
-      length: media.length,
+      length: media.length
     }
   }))
 
-  const resp = await props.onUpload({ id: props.id, chain: messages, tags: Array.from(tags.value) })
+  const resp = await props.onUpload({ id: props.id, messages, tags: Array.from(tags.value) })
   if (!resp.success) {
     ElMessage({
       type: 'warning',
-      message: resp.message,
+      message: resp.message
     })
     return
   }
   ElMessage({
     type: 'success',
-    message: '上传成功',
+    message: '上传成功'
   })
 
   // 清理objectUrl
   data.value.forEach(e => {
-    const url = (e as UnUploadMediaMessage).url
+    const url = (e as UnUploadMediaElement).url
     if (url) URL.revokeObjectURL(url)
   })
   data.value = []
@@ -262,7 +265,7 @@ async function uploadCompositeMessage() {
 }
 
 defineExpose({
-  data,
+  data
 })
 </script>
 

@@ -7,12 +7,12 @@
       <view-image
         v-if="type == 'IMAGE'"
         :message="message"
-        :load-height="viewData.displayHeight"
+        :load-height="viewData.displayHeight!"
       />
       <view-video
         v-else-if="type == 'VIDEO'"
         :message="message"
-        :load-height="viewData.displayHeight"
+        :load-height="viewData.displayHeight!"
       />
       <view-audio
         v-else-if="type == 'AUDIO'"
@@ -26,7 +26,7 @@
     <div style="display: flex; margin-top: 20px;">
       <tag-list :tags="message.tags" size="default" />
       <el-button
-        v-if="auth.perms.includes('message:edit')"
+        v-if="auth.perms.includes('media:edit')"
         :icon="EditPen"
         circle
         style="margin-left: auto; margin-right: 5px"
@@ -47,14 +47,14 @@ import ViewText from '@/components/message/view/ViewText.vue'
 import ViewVideo from '@/components/message/view/ViewVideo.vue'
 import ViewAudio from '@/components/message/view/ViewAudio.vue'
 import TagList from '@/components/message/TagList.vue'
-import type { MessageViewData } from '@/api/type'
 import { onMounted, ref } from 'vue'
 import { EditPen } from '@element-plus/icons-vue'
 import { auth } from '@/api/auth'
 import MessageBuilder from '@/components/message/MessageBuilder.vue'
 import { toUnUpload } from '@/api/convert'
-import type { UnUploadMessage } from '@/api/upload'
+import type { UnUploadElement } from '@/api/upload'
 import { type BaseResp, client } from '@/api/api'
+import type { MediaContentDto, MessageViewData } from '@/api/types/media'
 
 type PropsType = {
   viewData: MessageViewData
@@ -72,12 +72,12 @@ function showDetail(viewData: MessageViewData) {
 }
 
 const isShowEdit = ref(false)
-const id = ref<number>()
-const editing = ref<UnUploadMessage[]>([])
-const tags = ref<number[]>([])
+const id = ref<bigint>()
+const editing = ref<UnUploadElement[]>([])
+const tags = ref<bigint[]>([])
 
-async function handleUpload(data): BaseResp {
-  return await client.put<BaseResp>('/api/message', data).then(e => e.data)
+async function handleUpload(data: MediaContentDto): Promise<BaseResp> {
+  return await client.put<BaseResp>('/api/media', data).then(e => e.data)
 }
 
 async function showEdit() {
@@ -88,7 +88,7 @@ async function showEdit() {
 }
 
 onMounted(() => {
-  props.viewData.element = el
+  props.viewData.element = el.value
 })
 </script>
 

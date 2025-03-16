@@ -1,7 +1,7 @@
 <template>
   <div>
     <video
-      :src="`/api/file/${(props.message.content[0] as ImageMessage)!.id}.${(message.content[0] as ImageMessage).format}`"
+      :src="`/api/file/${(props.message.content[0] as ImageElement)!.id}.${(message.content[0] as ImageElement).format}`"
       style="display: flex"
       @click="clickVideo"
     />
@@ -12,7 +12,7 @@
       fullscreen
     >
       <video
-        :src="`/api/file/${(props.message.content[0] as ImageMessage)!.id}.${(message.content[0] as ImageMessage).format}`"
+        :src="`/api/file/${(props.message.content[0] as ImageElement)!.id}.${(message.content[0] as ImageElement).format}`"
         style="height: 95vh; width: 95vh; margin: auto; display: flex;"
         controls
       />
@@ -21,7 +21,7 @@
 </template>
 
 <script setup lang="ts">
-import { type ImageMessage, type MessageData } from '@/api/type'
+import { type ImageElement, type MessageData } from '@/api/types/media'
 import { ref } from 'vue'
 
 interface PropsType {

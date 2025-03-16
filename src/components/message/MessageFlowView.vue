@@ -1,14 +1,14 @@
 <template>
-  <div v-if="props.load" style="display: flex">
+  <div style="display: flex">
     <template v-for="column in columns" :key="column.id">
-      <div style="flex: 1;" :ref="el => column.element = el">
+      <div style="flex: 1;" :ref="e => column.el = e as HTMLElement">
         <template v-for="message in column.messages" :key="message.index">
           <message-card-view :view-data="message" @show-detail="showDetail(message)" />
         </template>
-        <InfiniteLoading :finished="finished" @infinite="loadData" />
+        <infinite-loading :finished="finished" @infinite="loadData" />
       </div>
     </template>
-    <InfiniteLoading v-if="columns.length === 0" :finished="finished" @infinite="loadData" />
+    <infinite-loading v-if="columns.length === 0" :finished="finished" @infinite="loadData" />
     <teleport to="body" v-if="visible">
       <message-detail ref="detail" :message="messages[detailIndex]" @next="next" @prev="prev" @close="close" />
     </teleport>
@@ -16,14 +16,14 @@
 </template>
 
 <script setup lang="ts">
-import type { MessageData, MessageViewData } from '@/api/type'
 import InfiniteLoading from '@/components/InfiniteLoading.vue'
 import { onMounted, onUnmounted, ref } from 'vue'
 import MessageDetail from '@/components/message/MessageDetail.vue'
 import MessageCardView from '@/components/message/MessageCardView.vue'
+import type { HasSize, MessageData, MessageViewData } from '@/api/types/media'
 
 type PropsType = {
-  load: boolean
+  isLoading: boolean
 }
 
 const props = defineProps<PropsType>()
@@ -57,6 +57,7 @@ const emit = defineEmits(['fetch'])
 const lastFetch = ref(0)
 
 function loadData() {
+  if (props.isLoading) return
   const now = Date.now()
   if (now - lastFetch.value < 300) return
   lastFetch.value = now
@@ -99,7 +100,7 @@ function fillColumns(data: MessageData[]) {
       return currHeight < accHeight ? current : acc
     }).id
     const column = columns.value[columnId]
-    const { width, height } = message.content[0]
+    const { width, height } = message.content[0] as any as HasSize
     const displayHeight = width < computedColumnWidth ? height : height / width * computedColumnWidth
     const viewData: MessageViewData = {
       index: messages.value.length,
@@ -136,7 +137,7 @@ function close() {
   messages.value[detailIndex.value]?.element?.scrollIntoView({ behavior: 'smooth' })
 }
 
-defineExpose({ receive, clear })
+defineExpose({ receive, clear, columns, messages })
 
 const task = ref<number>()
 

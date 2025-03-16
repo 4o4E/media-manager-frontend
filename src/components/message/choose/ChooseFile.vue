@@ -2,14 +2,14 @@
   <!-- 预览 -->
   <corner-icon v-if="file" @close="clear">
     <video
-      v-if="chooseType === 'VIDEO'"
+      v-if="chooseType === MediaType.VIDEO"
       style="max-width: 300px; max-height: 300px"
       :src="fileUrl"
       @loadedmetadata="handleVideoMetadata"
       controls
     />
     <img
-      v-if="chooseType === 'IMAGE'"
+      v-if="chooseType === MediaType.IMAGE"
       style="max-width: 300px; max-height: 300px"
       :src="fileUrl"
       alt="IMAGE"
@@ -69,47 +69,47 @@
 
 import { onMounted, onUnmounted, ref } from 'vue'
 import { ElMessage } from 'element-plus'
-import type { HasLength, HasSize } from '@/api/type'
+import { type HasFile, type HasLength, type HasSize, type MediaMediaType, MediaType } from '@/api/types/media'
 import CornerIcon from '@/components/CornerIcon.vue'
 
 interface PropsType {
-  chooseType: 'IMAGE' | 'VIDEO' | 'AUDIO'
+  chooseType: MediaMediaType
   maxWidth: number
 }
 
 const choose = {
-  IMAGE: {
+  image: {
     display: '图片',
-    accept: ['png', 'jpg', 'jpeg', 'gif', 'bmp'],
+    accept: ['png', 'jpg', 'jpeg', 'gif', 'bmp']
   },
-  VIDEO: {
+  video: {
     display: '视频',
-    accept: ['mp4', 'avi'],
+    accept: ['mp4', 'avi']
   },
-  AUDIO: {
+  audio: {
     display: '音频',
-    accept: ['mp3', 'flac', 'm4a', 'ogg'],
-  },
+    accept: ['mp3', 'flac', 'm4a', 'ogg']
+  }
 }
 
 const props = defineProps<PropsType>()
 const file = ref<File>()
 const fileUrl = ref<string>()
 const uploadZone = ref<HTMLElement>()
-const fileInputInstance = ref<HTMLElement>()
+const fileInputInstance = ref<HTMLInputElement>()
 const over = ref()
 
 function onFileSelect() {
-  const files = fileInputInstance.value.files
+  const files = fileInputInstance.value!.files!
   if (files.length === 0) return
   handleFileSelect(files[0])
 }
 
-function fileDrop(e) {
+function fileDrop(e: DragEvent) {
   e.preventDefault()
   over.value = undefined
   unHighlight(e)
-  handleFileSelect(e.dataTransfer.files[0])
+  handleFileSelect(e.dataTransfer!.files[0])
 }
 
 function handleFileSelect(selectedFile: File) {
@@ -119,7 +119,7 @@ function handleFileSelect(selectedFile: File) {
   if (!chooseElement.accept.includes(format)) {
     ElMessage({
       type: 'warning',
-      message: `文件格式不正确, ${chooseElement.display}仅支持 ${chooseElement.accept.join(', ')} 等格式`,
+      message: `文件格式不正确, ${chooseElement.display}仅支持 ${chooseElement.accept.join(', ')} 等格式`
     })
     return
   }
@@ -128,12 +128,12 @@ function handleFileSelect(selectedFile: File) {
   fileUrl.value = URL.createObjectURL(selectedFile)
 }
 
-function fileDragenter(e) {
+function fileDragenter(e: DragEvent) {
   e.preventDefault()
   over.value = e.target
 }
 
-function fileDragleave(e) {
+function fileDragleave(e: DragEvent) {
   if (e.target !== over.value) return
   e.preventDefault()
   over.value = undefined
@@ -142,12 +142,12 @@ function fileDragleave(e) {
 
 const hl = ref()
 
-function highlight(e) {
+function highlight(e: DragEvent) {
   hl.value = e.target
   uploadZone.value!.classList.add('active')
 }
 
-function unHighlight(e) {
+function unHighlight(e: DragEvent) {
   if (e.target !== hl.value) return
   hl.value = undefined
   uploadZone.value!.classList.remove('active')
@@ -156,21 +156,21 @@ function unHighlight(e) {
 onMounted(() => {
   document.addEventListener('dragenter', highlight)
   document.addEventListener('dragleave', unHighlight)
-  document.addEventListener('dragdrop', unHighlight)
+  document.addEventListener('drop', unHighlight)
 })
 
 onUnmounted(() => {
   document.removeEventListener('dragenter', highlight)
   document.removeEventListener('dragleave', unHighlight)
-  document.removeEventListener('dragdrop', unHighlight)
+  document.removeEventListener('drop', unHighlight)
 })
 
-const metaInfo = ref<HasLength & HasSize>({})
+const metaInfo = ref<HasLength & HasSize & HasFile>({ length: -1, width: -1, height: -1, file: false, format: '' })
 
 function clear() {
   file.value = undefined
   fileUrl.value = undefined
-  metaInfo.value = {}
+  metaInfo.value = { length: -1, width: -1, height: -1, file: false, format: '' }
 }
 
 function handleVideoMetadata(event: Event) {
@@ -195,7 +195,7 @@ defineExpose({
   file,
   fileUrl,
   metaInfo,
-  clear,
+  clear
 })
 </script>
 

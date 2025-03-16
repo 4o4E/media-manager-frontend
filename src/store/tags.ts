@@ -4,15 +4,14 @@ import { client } from '@/api/api'
 import { now } from '@vueuse/core'
 
 interface TagDto {
-  id: number
-  name: string
-  description: string
-  alias: string[]
+  id: bigint
+  names: string[]
+  remark: string
 }
 
 interface Option {
-  label: string
-  value: number
+  labels: string[]
+  value: bigint
 }
 
 const tagsKey = 'tags'
@@ -22,7 +21,7 @@ export const useTagsStore = defineStore(tagsKey, {
     tagInfo: {
       tags: TagDto[],
       options: Option[]
-      tagsMap: { [key: number]: TagDto, length?: number },
+      tagsMap: Map<bigint, TagDto>,
       updateInterval: number
       lastUpdated: number
     }
@@ -30,7 +29,7 @@ export const useTagsStore = defineStore(tagsKey, {
     tagInfo: {
       tags: [],
       options: [],
-      tagsMap: {},
+      tagsMap: new Map<bigint, TagDto>(),
       updateInterval: 0,
       lastUpdated: 0
     }
@@ -40,28 +39,27 @@ export const useTagsStore = defineStore(tagsKey, {
     // 获取数据字典
     async fetchDictionary(): Promise<boolean> {
       try {
-        const resp = await client.get<BaseResp<TagDto[]>>('/api/tags', {
+        const resp = await client.get<BaseResp<TagDto[]>>('/api/tags/all', {
           params: {
-            size: 1000,
-            lastUpdated: this.tagInfo.tags.length === 0 ? null : this.tagInfo.lastUpdated
+            lastUpdated: this.tagInfo.tags.length === 0 ? null : this.tagInfo.lastUpdated,
           }
         })
         if (resp.status === 304) return false
-        const tags: { [key: number]: TagDto, length: number } = { length: 0 }
+        const tags = new Map<bigint, TagDto>()
         const options: Option[] = []
         this.$patch(({ tagInfo }) => {
           tagInfo.tags = resp.data.data!
           tagInfo.lastUpdated = now()
         })
         this.tagInfo.tags.forEach(tag => {
-          tags[tag.id] = tag
-          tags.length += 1
-          tag.alias.forEach(e => options.push({ label: e, value: tag.id }))
+          tags.set(tag.id, tag)
+          tag.names.forEach(e => options.push({ label: e, value: tag.id }))
         })
         this.$patch(({ tagInfo }) => {
           tagInfo.tagsMap = tags
           tagInfo.options = options
         })
+        this.saveTag()
         return true
       } catch (error) {
         console.error('更新tags时出现异常:', error)
@@ -73,17 +71,22 @@ export const useTagsStore = defineStore(tagsKey, {
     async loadTags() {
       const cachedData = localStorage.getItem(tagsKey)
       if (cachedData) this.$patch(state => {
-        state.tagInfo = JSON.parse(cachedData)
+        const tagInfo = JSON.parse(cachedData)
+        tagInfo.tagsMap = new Map<bigint, TagDto>(Object.entries(tagInfo.tagsMap) as any)
+        tagInfo.options.forEach((e: any) => e.vk = e.label + e.value)
+        state.tagInfo = tagInfo
       })
       await this.fetchDictionary()
     },
 
     // 定时更新数据字典
     async updateTags() {
-      const data = await this.fetchDictionary()
-      if (data) {
-        localStorage.setItem(tagsKey, JSON.stringify(this.tagInfo))
-      }
+      const result = await this.fetchDictionary()
+      if (result) this.saveTag()
+    },
+
+    saveTag() {
+      localStorage.setItem(tagsKey, JSON.stringify(Object.assign({}, this.tagInfo, { tagsMap: Object.fromEntries(this.tagInfo.tagsMap) })))
     },
 
     // 开始定时更新

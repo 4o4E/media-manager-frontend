@@ -1,23 +1,24 @@
-import type { HasLength, HasSize } from '@/api/type'
+import { type HasLength, type HasSize, type MediaMediaType, MediaType } from '@/api/types/media'
 
-export interface UnUploadMessage {
-  type: 'TEXT' | 'AUDIO' | 'IMAGE' | 'VIDEO'
+export interface UnUploadElement {
+  type: MediaType
   index: number
 }
 
-export interface UnUploadMediaMessage extends UnUploadMessage {
-  type: 'AUDIO' | 'IMAGE' | 'VIDEO'
+export interface UnUploadMediaElement extends UnUploadElement {
+  id?: string
+  type: MediaMediaType
   blob?: Blob
   format?: string
-  width?: number
-  height?: number
-  length?: number
+  width?: bigint
+  height?: bigint
+  length?: bigint
   url?: string
 }
 
-export interface UnUploadAudioMessage extends UnUploadMediaMessage, HasLength {
-  type: 'AUDIO'
-  length: number
+export interface UnUploadAudioMessage extends UnUploadMediaElement, HasLength {
+  type: MediaType.AUDIO
+  length: bigint
 }
 
 // export interface UnUploadBinaryMessage {
@@ -26,20 +27,20 @@ export interface UnUploadAudioMessage extends UnUploadMediaMessage, HasLength {
 //   file: boolean
 // }
 
-export interface UnUploadImageMessage extends UnUploadMediaMessage, HasSize {
-  type: 'IMAGE'
-  width: number
-  height: number
+export interface UnUploadImageMessage extends UnUploadMediaElement, HasSize {
+  type: MediaType.IMAGE
+  width: bigint
+  height: bigint
 }
 
-export interface UnUploadVideoMessage extends UnUploadMediaMessage, HasLength, HasSize {
-  type: 'VIDEO'
-  width: number
-  height: number
-  length: number
+export interface UnUploadVideoMessage extends UnUploadMediaElement, HasLength, HasSize {
+  type: MediaType.VIDEO
+  width: bigint
+  height: bigint
+  length: bigint
 }
 
-export interface UnUploadTextMessage extends UnUploadMessage {
-  type: 'TEXT'
+export interface UnUploadTextMessage extends UnUploadElement {
+  type: MediaType.TEXT
   content: string
 }

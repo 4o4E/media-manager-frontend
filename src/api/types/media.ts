@@ -160,6 +160,7 @@ export interface MessageData {
   approved: number
   tags: bigint[]
   content: MediaElement[]
+  liked: boolean
 }
 
 export interface MessageViewData {

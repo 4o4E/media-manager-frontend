@@ -10,7 +10,7 @@ interface TagDto {
 }
 
 interface Option {
-  labels: string[]
+  label: string
   value: bigint
 }
 

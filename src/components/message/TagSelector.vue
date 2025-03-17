@@ -2,7 +2,6 @@
   <el-select-v2
     style="max-width: 300px;"
     v-model="selected"
-    value-key="vk"
     :options="tagInfo.options"
     @change="onChange"
     multiple
@@ -11,6 +10,7 @@
     collapse-tags-tooltip
     :max-collapse-tags="3"
     filterable
+    clearable
     placeholder="选择标签"
   />
 </template>
@@ -23,18 +23,19 @@ import { useTagsStore } from '@/store/tags'
 const props = defineProps({
   modelValue: {
     type: Array<bigint>,
-    required: true,
+    required: true
   }
-});
+})
 
 const selected = ref<bigint[]>(props.modelValue)
 
 const { tagInfo } = useTagsStore()
 
 
-const emit = defineEmits(['update:modelValue']);
+const emit = defineEmits(['update:modelValue'])
+
 function onChange() {
-  emit('update:modelValue', selected.value);
+  emit('update:modelValue', selected.value)
 }
 
 </script>

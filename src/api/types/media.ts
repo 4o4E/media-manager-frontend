@@ -6,10 +6,10 @@ export enum MediaType {
 }
 
 export const MediaTypes = {
-  'image': { label: '图片', enum: MediaType.IMAGE },
-  'video': { label: '视频', enum: MediaType.VIDEO },
-  'audio': { label: '音频', enum: MediaType.AUDIO },
-  'text': { label: '文本', enum: MediaType.TEXT },
+  'image': { label: '图片', enum: MediaType.IMAGE, hasCover: true },
+  'video': { label: '视频', enum: MediaType.VIDEO, hasCover: true },
+  'audio': { label: '音频', enum: MediaType.AUDIO, hasCover: false },
+  'text': { label: '文本', enum: MediaType.TEXT, hasCover: false },
 }
 
 export type MediaMediaType = MediaType.AUDIO | MediaType.VIDEO | MediaType.IMAGE
@@ -41,6 +41,10 @@ export interface Local {
    * object url
    */
   url?: string
+  /**
+   * 上传过的元素
+   */
+  origin?: UploadedElement
 }
 
 export type LocalElement = MediaElement & Local | LocalTextElement
@@ -119,12 +123,12 @@ export interface VideoElement extends MediaElement, HasSize, HasLength, HasFile 
 /**
  * 未上传的视频元素
  */
-export interface LocalVideoElement extends MediaElement, HasSize, HasLength, HasFile, Local {}
+export interface LocalVideoElement extends VideoElement, Local {}
 
 /**
  * 已上传的视频元素
  */
-export interface UploadedVideoElement extends MediaElement, HasSize, HasLength, HasFile, Uploaded {}
+export interface UploadedVideoElement extends VideoElement, Uploaded {}
 
 /**
  * 文本元素
@@ -148,12 +152,14 @@ export interface MessageComment {
 
 export interface MediaContentDto {
   id?: bigint
+  title: string
   tags: bigint[]
-  messages: MediaElement[]
+  content: MediaElement[]
 }
 
 export interface MessageData {
   id: bigint
+  title: string
   upload: bigint
   time: bigint
   type: MediaType

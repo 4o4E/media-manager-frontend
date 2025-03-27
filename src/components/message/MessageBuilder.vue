@@ -37,7 +37,7 @@
                 @close="data.splice(index, 1)"
               >
                 <img
-                  :src="(message as UnUploadImageMessage)?.url ?? ''"
+                  :src="(message as LocalImageElement)?.url ?? ''"
                   alt="image"
                   style="max-width: 300px; max-height: 300px;"
                 />
@@ -48,12 +48,12 @@
               >
                 <video
                   v-if="message.type === MediaType.VIDEO || message.type === MediaType.AUDIO"
-                  :src="(message as UnUploadVideoMessage)?.url ?? ''"
+                  :src="(message as LocalVideoElement)?.url ?? ''"
                 />
               </corner-icon>
               <div v-if="message.type === MediaType.TEXT" style="margin-bottom: 8px; display: flex;">
                 <el-input type="textarea" disabled :autosize="{ minRows: 1, maxRows: 10 }"
-                          v-model="(message as UnUploadTextMessage).content" />
+                          v-model="(message as LocalTextElement).content" />
                 <el-button size="small" icon="Close" circle @click="data.splice(index, 1)" style="margin-left: 5px;" />
               </div>
             </li>
@@ -96,6 +96,10 @@
       </div>
       <!-- 输入tag -->
       <div>
+        <el-text size="large">标题</el-text>
+        <el-row>
+          <el-input v-model="title" />
+        </el-row>
         <el-text size="large">Tag</el-text>
         <el-row>
           <div>
@@ -139,19 +143,14 @@
 import { nextTick, ref } from 'vue'
 import ChooseFile from '@/components/message/choose/ChooseFile.vue'
 import { ElInput, ElMessage, ElSelectV2 } from 'element-plus'
-import type {
-  UnUploadImageMessage,
-  UnUploadMediaElement,
-  UnUploadTextMessage,
-  UnUploadVideoMessage
-} from '@/api/upload'
 import { type BaseResp, uploadFile } from '@/api/api'
 import { useTagsStore } from '@/store/tags'
 import CornerIcon from '@/components/CornerIcon.vue'
 import { VueDraggable } from 'vue-draggable-plus'
 import { now } from '@vueuse/core'
 import {
-  type LocalElement, type LocalTextElement,
+  type Local,
+  type LocalElement, type LocalImageElement, type LocalTextElement,
   type LocalVideoElement, type MediaContentDto,
   type MediaElement,
   MediaType,
@@ -160,6 +159,7 @@ import {
 } from '@/api/types/media'
 
 interface PropsType {
+  title?: string,
   id?: bigint,
   data?: LocalElement[],
   tags?: bigint[],
@@ -172,6 +172,7 @@ const props = defineProps<PropsType>()
 const data = ref<LocalElement[]>(props.data ?? [])
 const temp = ref<LocalElement>({ type: MediaType.IMAGE })
 const inputValue = ref<bigint>()
+const title = ref(props.title ?? 'untitled')
 const tags = ref(new Set<bigint>(props.tags ?? []))
 const choose = ref()
 const { tagInfo } = useTagsStore()
@@ -195,7 +196,7 @@ function changeType(type: MediaType) {
 
 function showAddBtn() {
   return temp.value.type === MediaType.TEXT
-    ? (temp.value as UnUploadTextMessage).content.length !== 0
+    ? (temp.value as LocalTextElement).content.length !== 0
     : choose.value?.file != null
 }
 
@@ -216,7 +217,7 @@ async function addToData() {
     })
   }
   temp.value = { type: temp.value.type }
-  if (temp.value.type === MediaType.TEXT) (temp.value as UnUploadTextMessage).content = ''
+  if (temp.value.type === MediaType.TEXT) (temp.value as LocalTextElement).content = ''
   choose.value?.clear()
 }
 
@@ -224,11 +225,15 @@ const emit = defineEmits(['uploadDone'])
 
 async function uploadCompositeMessage() {
   // 上传各文件
-  const messages: MediaElement[] = await Promise.all(data.value.map(async (e: LocalElement) => {
+  const content: MediaElement[] = await Promise.all(data.value.map(async (e: MediaElement) => {
     if (e.type === MediaType.TEXT) {
       return e as TextElement
     }
     const media = e as LocalVideoElement
+    const origin = media.origin
+    if (origin != null) {
+      return origin!
+    }
     const blob = media.blob!
     const id = await uploadFile(blob)
     return {
@@ -242,7 +247,7 @@ async function uploadCompositeMessage() {
     }
   }))
 
-  const resp = await props.onUpload({ id: props.id, messages, tags: Array.from(tags.value) })
+  const resp = await props.onUpload({ id: props.id, title: title.value, content, tags: Array.from(tags.value) })
   if (!resp.success) {
     ElMessage({
       type: 'warning',
@@ -257,7 +262,7 @@ async function uploadCompositeMessage() {
 
   // 清理objectUrl
   data.value.forEach(e => {
-    const url = (e as UnUploadMediaElement).url
+    const url = (e as Local)?.url
     if (url) URL.revokeObjectURL(url)
   })
   data.value = []

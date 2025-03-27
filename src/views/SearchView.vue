@@ -1,16 +1,14 @@
 <template>
-  <el-affix :offset="82">
-    <div class="search-box">
-      <search-mode-selector v-model="queryMode" />
-      <tag-selector v-model="tags" />
-      <el-button
-        v-if="tags.length !== 0"
-        type="success"
-        @click="search"
-      >搜索
-      </el-button>
-    </div>
-  </el-affix>
+  <div class="search-box">
+    <search-mode-selector v-model="queryMode" />
+    <tag-selector v-model:tags="tags" />
+    <el-button
+      v-if="tags.length !== 0"
+      type="success"
+      @click="search"
+    >搜索
+    </el-button>
+  </div>
   <message-flow-view :isLoading="isLoading" ref="flow" @fetch="search" />
 </template>
 
@@ -43,7 +41,6 @@ async function search() {
     queryMode: queryMode.value,
     tags: Array.from(tags.value),
     count: 10,
-    type: 'IMAGE'
   }
   const queryJson = stringify(query)
   const clear = lastQuery !== queryJson

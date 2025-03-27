@@ -1,9 +1,9 @@
 <template>
-  <el-card style="margin: 20px">
+  <div class="message-card">
     <p style="display: none;">
       {{ props.viewData }}
     </p>
-    <div @click="showDetail(viewData)" ref="el">
+    <div class="card-cover" @click="showDetail(viewData)" ref="el">
       <view-image
         v-if="type == MediaType.IMAGE"
         :message="message"
@@ -23,7 +23,7 @@
         :message="message"
       />
     </div>
-    <div style="display: flex; margin-top: 20px;">
+    <div class="card-info">
       <tag-list :tags="message.tags" size="default" />
       <el-button
         :icon="Star"
@@ -41,11 +41,11 @@
       />
       <el-dialog draggable title="编辑" v-model="isShowEdit" width="80%">
         <div style="height: 60vh">
-          <message-builder :id="id" :data="editing" :tags="tags" :on-upload="handleUpload" btn="更新" @upload-done="isShowEdit = false" />
+          <message-builder :id="id" :title="title" :data="editing" :tags="tags" :on-upload="handleUpload" btn="更新" @upload-done="isShowEdit = false" />
         </div>
       </el-dialog>
     </div>
-  </el-card>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -59,9 +59,8 @@ import { EditPen, Star } from '@element-plus/icons-vue'
 import { auth } from '@/api/auth'
 import MessageBuilder from '@/components/message/MessageBuilder.vue'
 import { toUnUpload } from '@/api/convert'
-import type { UnUploadElement } from '@/api/upload'
 import { type BaseResp, client } from '@/api/api'
-import { type MediaContentDto, MediaType, type MessageViewData } from '@/api/types/media'
+import { type LocalElement, type MediaContentDto, MediaType, type MessageViewData } from '@/api/types/media'
 import { ElMessage } from 'element-plus'
 
 type PropsType = {
@@ -81,7 +80,8 @@ function showDetail(viewData: MessageViewData) {
 
 const isShowEdit = ref(false)
 const id = ref<bigint>()
-const editing = ref<UnUploadElement[]>([])
+const title = ref<string>()
+const editing = ref<LocalElement[]>([])
 const tags = ref<bigint[]>([])
 
 async function handleUpload(data: MediaContentDto): Promise<BaseResp> {
@@ -92,6 +92,7 @@ async function showEdit() {
   id.value = message.id
   editing.value = await toUnUpload(message)
   tags.value = message.tags
+  title.value = message.title
   isShowEdit.value = true
 }
 
@@ -120,5 +121,23 @@ onMounted(() => {
 </script>
 
 <style scoped>
+.message-card {
+  margin: 20px 10px;
+  border-radius: 20px;
+  background-color: var(--el-bg-color-overlay);
+  border: 1px solid var(--el-border-color-light);
+  overflow: hidden;
+}
 
+.card-cover {
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  overflow: hidden;
+  position: relative;
+}
+
+.card-info {
+  display: flex;
+  margin: 10px;
+}
 </style>

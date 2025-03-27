@@ -1,43 +1,46 @@
 <template>
-  <el-affix :offset="100">
-    <div class="search-box">
-      <el-row>
-        <el-space direction="horizontal">
-          <search-mode-selector v-model="queryMode" />
-          <tag-selector v-model:tags="tags" />
-          <el-button
-            type="success"
-            @click="refresh"
-          >搜索
-          </el-button>
-        </el-space>
-      </el-row>
-      <el-row>
-        <page-selector
-          v-model:page="page"
-          v-model:size="size"
-          v-model:total="total"
-          @refresh="refresh"
-        />
-      </el-row>
+  <div>
+    <div class="tags" ref="tagsRef">
+      <el-tag
+        v-for="tag in tags"
+        :key="tag"
+        closable
+        :disable-transitions="false"
+        size="large"
+        @close="handleClose(tag)"
+      >{{ tagInfo.tagsMap.get(tag)!.names[0] }}
+      </el-tag>
     </div>
-  </el-affix>
+    <div class="flex gap-2">
+      <el-select-v2
+        style="margin-bottom: 10px; width: 160px;"
+        v-model="selectedTagId"
+        value-key="vk"
+        :options="tagInfo.options"
+        @change="onChange"
+        filterable
+        placeholder="选择标签"
+      />
+      <el-button
+        type="success"
+        @click="refresh"
+      >搜索</el-button>
+      <el-select v-model="queryMode" style="width: 150px">
+        <el-option label="包含任意标签" :value="0" />
+        <el-option label="包含所有标签" :value="1" />
+      </el-select>
+    </div>
+  </div>
+  <el-divider />
   <div>
     <template v-for="(message, index) in data" :key="index">
-      <message-preview :width="300" :message="message" @edit="showEdit(message)" />
+      <message-preview :width="300" :message="message" @edit="showEdit(message)"/>
       <el-divider />
     </template>
   </div>
   <el-dialog draggable title="编辑" v-model="isShowEdit" destroy-on-close width="80%">
     <div style="height: 60vh">
-      <message-builder
-        :id="id"
-        :title="title"
-        :data="editing"
-        :tags="editTags"
-        :on-upload="handleUpload"
-        btn="更新"
-        @upload-done="isShowEdit = false; refresh()" />
+      <message-builder :id="id" :title :data="editing" :tags="editTags" :on-upload="handleUpload" btn="更新" @upload-done="isShowEdit = false; refresh()" />
     </div>
   </el-dialog>
   <page-selector
@@ -51,23 +54,24 @@
 <script setup lang="ts">
 import { type BaseResp, client, type PageResp } from '@/api/api'
 import type { LocalElement, MediaContentDto, MessageData } from '@/api/types/media'
-import { ElDivider, ElMessage, ElAffix } from 'element-plus'
+import { ElMessage, ElSelectV2, ElDivider } from 'element-plus'
 import { ref } from 'vue'
+import { useTagsStore } from '@/store/tags'
 import PageSelector from '@/components/PageSelector.vue'
 import MessagePreview from '@/components/message/edit/MessagePreview.vue'
 import MessageBuilder from '@/components/message/MessageBuilder.vue'
 import { toUnUpload } from '@/api/convert'
-import SearchModeSelector from '@/components/SearchModeSelector.vue'
-import TagSelector from '@/components/message/TagSelector.vue'
 
 const tagsRef = ref<HTMLElement>()
 const queryMode = ref<0 | 1>(0)
-const tags = ref<bigint[]>([])
+const tags = ref<Set<bigint>>(new Set())
+const selectedTagId = ref<bigint>()
+const { tagInfo } = useTagsStore()
 
 const isShowEdit = ref(false)
 const id = ref<bigint>()
-const title = ref<string>()
 const editing = ref<LocalElement[]>([])
+const title = ref<string>()
 const editTags = ref<bigint[]>([])
 
 async function handleUpload(data: MediaContentDto): Promise<BaseResp> {
@@ -76,10 +80,21 @@ async function handleUpload(data: MediaContentDto): Promise<BaseResp> {
 
 async function showEdit(message: MessageData) {
   id.value = message.id
-  title.value = message.title
   editing.value = await toUnUpload(message)
+  title.value = message.title
   editTags.value = message.tags
   isShowEdit.value = true
+}
+
+function handleClose(tag: bigint) {
+  tags.value.delete(tag)
+}
+
+function onChange() {
+  if (selectedTagId.value) {
+    tags.value.add(selectedTagId.value)
+  }
+  selectedTagId.value = undefined
 }
 
 const data = ref<MessageData[]>([])
@@ -88,17 +103,14 @@ const size = ref(20)
 const total = ref(0)
 
 async function refresh() {
-  const resp = await client.post<BaseResp<PageResp<MessageData>>>('/api/admin/media', {
-    queryMode: queryMode.value,
-    tags: Array.from(tags.value),
+  const resp = await client.post<BaseResp<PageResp<MessageData>>>('/api/media/likes', {
     page: page.value,
     size: size.value,
-    type: 'image'
   }).then(e => e.data)
   if (!resp.success) {
     ElMessage({
       type: 'warning',
-      message: resp.message
+      message: resp.message,
     })
     return
   }
@@ -112,13 +124,19 @@ refresh()
 </script>
 
 <style scoped>
-.search-box {
-  margin: 20px 20px 20px 10px;
+.flex {
+  display: flex;
+}
+
+.gap-2 {
   grid-gap: 0.5rem;
   gap: 0.5rem;
-  padding: 20px;
-  background-color: var(--el-bg-color-overlay);
-  border: 1px solid var(--el-border-color-light);
-  border-radius: var(4px);
+}
+
+.tags {
+  display: flex;
+  grid-gap: 0.5rem;
+  gap: 0.5rem;
+  margin-bottom: 10px;
 }
 </style>

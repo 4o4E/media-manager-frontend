@@ -42,6 +42,9 @@ export const client = (() => {
       }
     },
     transformRequest: (data, headers) => {
+      if (data instanceof FormData) {
+        return data
+      }
       headers['Content-Type'] = 'application/json'
       return JSON.stringify(transformReq(data))
     }

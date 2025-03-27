@@ -15,9 +15,9 @@
       <img
         ref="image"
         class="detail"
-        v-if="message.message.type === 'IMAGE'"
-        :src="`/api/file/${(message.message.content[0] as ImageElement).id}.${(message.message.content[0] as ImageElement).format}`"
-        :alt="(message.message.content[0] as ImageElement).id"
+        v-if="message.message.type === MediaType.IMAGE"
+        :src="`/api/file/${img.id}.${img.format}`"
+        :alt="img.id"
         draggable="false"
         @load="autoScale"
       />
@@ -58,7 +58,7 @@
 </template>
 
 <script setup lang="ts">
-import type { ImageElement, MessageViewData } from '@/api/types/media'
+import { MediaType, type MessageViewData, type UploadedImageElement } from '@/api/types/media'
 import { onMounted, onUnmounted, ref, toRef } from 'vue'
 import { ArrowLeft, ArrowRight, Minus, Plus, Promotion } from '@element-plus/icons-vue'
 
@@ -67,8 +67,9 @@ interface PropsType {
 }
 
 const props = defineProps<PropsType>()
-const imgW = toRef(() => (props.message.message.content[0] as ImageElement).width)
-const imgH = toRef(() => (props.message.message.content[0] as ImageElement).height)
+const img = toRef(() => props.message.message.content[0] as UploadedImageElement)
+const imgW = toRef(() => img.value.width)
+const imgH = toRef(() => img.value.height)
 const emit = defineEmits(['next', 'prev', 'close'])
 const image = ref<HTMLElement>()
 const mask = ref<HTMLElement>()
@@ -185,7 +186,7 @@ onMounted(() => {
     y: (maxH - imgH.value) / 2,
   }
   updateImage()
-  mask.value!.addEventListener('mousewheel', onWheel, { passive: false })
+  mask.value!.addEventListener('wheel', onWheel, { passive: false })
   autoScale()
   window.onresize = onResize
   window.addEventListener('keyup', (e: KeyboardEvent) => {
